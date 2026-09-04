@@ -1,0 +1,27 @@
+[
+  {
+    "id": "card-001",
+    "image": "assets/cards/example-01.webp",
+    "character": "Character Name",
+    "anime": "Anime Title",
+    "quote": "A short, memorable line that captures the character.",
+    "author": "Character Name",
+    "animation": "heart_burst"
+  },
+  {
+    "id": "card-002",
+    "image": "assets/cards/example-02.webp",
+    "character": "Another Character",
+    "anime": "Another Anime",
+    "quote": "Author is optional — this card omits it and the UI hides that field automatically.",
+    "animation": "fireflies"
+  },
+  {
+    "id": "card-003",
+    "image": "assets/cards/example-03.webp",
+    "character": "Third Character",
+    "anime": "Third Anime",
+    "quote": "An unrecognized animation name safely falls back to \"none\" instead of breaking the card.",
+    "animation": "this-animation-does-not-exist"
+  }
+]
