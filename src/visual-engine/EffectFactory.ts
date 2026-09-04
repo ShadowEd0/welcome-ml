@@ -9,6 +9,10 @@ import { FirefliesEffect } from './effects/FirefliesEffect';
 import { MistEffect } from './effects/MistEffect';
 import { ParticlesEffect } from './effects/ParticlesEffect';
 import { RainEffect } from './effects/RainEffect';
+// src/visual-engine/EffectFactory.ts — ajouter les nouveaux effets au registre
+import { HeartFormationEffect } from './effects/HeartFormationEffect';
+import { ConstellationEffect } from './effects/ConstellationEffect';
+import { AuroraEffect } from './effects/AuroraEffect';
 
 export type EffectConstructor = new (id?: string) => BaseEffect<any>;
 
@@ -24,6 +28,10 @@ export class EffectFactory {
     ['mist', MistEffect as unknown as EffectConstructor],
     ['particles', ParticlesEffect as unknown as EffectConstructor],
     ['rain', RainEffect as unknown as EffectConstructor],
+    // ... entrées existantes ...
+    ['heart_formation', HeartFormationEffect as unknown as EffectConstructor],
+    ['constellation', ConstellationEffect as unknown as EffectConstructor],
+    ['aurora', AuroraEffect as unknown as EffectConstructor],
   ]);
 
   public static create(type: string, id?: string): BaseEffect<any> | null {

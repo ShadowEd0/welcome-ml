@@ -5,12 +5,27 @@ import { UniverseRegistry } from './universes/UniverseRegistry';
 import { Randomizer } from './universes/Randomizer';
 import { FloatingCardsLayer } from './cards/FloatingCardsLayer';
 import { CardsProvider } from './cards/CardsContext';
-import { VisualEffectConfig } from './core/contracts';
 import { UniverseConfig } from './universes/types';
+import type { EffectConfig } from './visual-engine/types';
+import { paletteFromUniverse } from './visual-engine/palette';
+// ❌ supprimer : import { VisualEffectConfig } from './core/contracts';
+
 
 const PREFS_STORAGE_KEY = 'welcome_ml_user_prefs';
 const SEVEN_MINUTES_MS = 7 * 60 * 1000;
+const derivedPalette = paletteFromUniverse(currentUniverse?.palette);
 
+// ✅ on conserve TOUT ce que le JSON déclare (color, count, size, opacity...)
+// et on n'ajoute que ce qui manquait : la palette de l'univers + les multiplicateurs utilisateur.
+const derivedPalette = paletteFromUniverse(currentUniverse?.palette);
+const activeEffects: EffectConfig[] = (currentUniverse?.effects || []).map((eff) => ({
+  ...eff,
+   speed: (eff.speed ?? 1) * preferences.speed,
+   count: eff.count !== undefined
+     ? Math.max(1, Math.round(eff.count * preferences.intensity))
+     : eff.count,
+   palette: derivedPalette,
+ }));
 const DEFAULT_PREFERENCES: UserPreferences = {
   universeId: 'cosmos',
   intensity: 1.0,
@@ -144,7 +159,7 @@ export const App: React.FC = () => {
         )}
 
         <VisualCanvas
-          effects={activeEffects as any}
+          effects={activeEffects}
           quality={preferences.quality}
         />
 

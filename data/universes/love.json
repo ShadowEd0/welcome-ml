@@ -17,6 +17,7 @@
   "effects": [
     { "type": "hearts", "count": 45, "color": "#FF1493", "speed": 0.9, "size": 1.2 },
     { "type": "glow", "color": "#FFD700", "opacity": 0.25 }
+    , { "type": "heart_formation", "eventIntervalSeconds": 65, "size": 1.0, "opacity": 0.9 }
   ],
   "atmosphere": {
     "blurLevel": 0,

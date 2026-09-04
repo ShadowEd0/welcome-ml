@@ -1,5 +1,6 @@
 import { BaseEffect } from '../BaseEffect';
 import { RenderContext } from '../types';
+import { resolveEffectPalette, getWeightedPaletteColor } from '../palette';
 
 interface Star {
   x: number;
@@ -8,6 +9,7 @@ interface Star {
   baseAlpha: number;
   twinkleSpeed: number;
   twinklePhase: number;
+  color: string;
 }
 
 export class StarsEffect extends BaseEffect<Star> {

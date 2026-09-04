@@ -25,6 +25,7 @@ export interface EffectConfig {
   type: string;
   enabled?: boolean;
   color?: string | string[];
+  palette?: string[];
   count?: number;
   speed?: number;
   size?: number;

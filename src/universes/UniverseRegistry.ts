@@ -10,6 +10,10 @@ import sunsetJson from '../../data/universes/sunset.json';
 import oceanJson from '../../data/universes/ocean.json';
 import fantasyJson from '../../data/universes/fantasy.json';
 import dreamJson from '../../data/universes/dream.json';
+import auroraJson from '../../data/universes/aurora.json';
+import moonlightJson from '../../data/universes/moonlight.json';
+import starlightJson from '../../data/universes/starlight.json';
+import roseGardenJson from '../../data/universes/rose_garden.json';
 
 export class UniverseRegistry {
   private static instance: UniverseRegistry;
@@ -38,6 +42,7 @@ export class UniverseRegistry {
       sunsetJson,
       oceanJson,
       fantasyJson,
+      auroraJson, moonlightJson, starlightJson, roseGardenJson,
     ];
 
     for (const raw of rawUniverses) {
