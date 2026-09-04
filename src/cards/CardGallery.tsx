@@ -1,4 +1,3 @@
-import React from "react";
 import { useCardsContext } from "./CardsContext";
 import { FlipCard } from "./FlipCard";
 

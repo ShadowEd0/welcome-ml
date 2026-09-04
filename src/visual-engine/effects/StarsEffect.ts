@@ -8,6 +8,7 @@ interface Star {
   baseAlpha: number;
   twinkleSpeed: number;
   twinklePhase: number;
+  color: string;
 }
 
 export class StarsEffect extends BaseEffect<Star> {
@@ -18,7 +19,7 @@ export class StarsEffect extends BaseEffect<Star> {
   protected initPool(context: RenderContext): void {
     const count = Math.floor(this.TargetParticleCount * context.qualityMultiplier);
     this.particles = [];
-    const colors = Array.isArray(this.config.color) ? this.config.color : ['#FFFFFF'];
+    const colors = Array.isArray(this.config.color) ? this.config.color : [this.config.color as string || '#FFFFFF'];
 
     for (let i = 0; i < count; i++) {
       this.particles.push({
@@ -28,6 +29,7 @@ export class StarsEffect extends BaseEffect<Star> {
         baseAlpha: Math.random() * 0.7 + 0.3,
         twinkleSpeed: Math.random() * 2 + 0.5,
         twinklePhase: Math.random() * Math.PI * 2,
+        color: colors[i % colors.length],
       });
     }
   }
@@ -41,13 +43,11 @@ export class StarsEffect extends BaseEffect<Star> {
 
   public render(context: RenderContext): void {
     const { ctx } = context;
-    const color = Array.isArray(this.config.color) ? this.config.color[0] : (this.config.color as string) || '#FFFFFF';
-
     ctx.save();
-    ctx.fillStyle = color;
 
     for (let i = 0; i < this.particles.length; i++) {
       const p = this.particles[i];
+      ctx.fillStyle = p.color;
       const alpha = p.baseAlpha * (0.5 + 0.5 * Math.sin(p.twinklePhase)) * ((this.config.opacity as number) ?? 1);
 
       ctx.globalAlpha = Math.max(0, Math.min(1, alpha));

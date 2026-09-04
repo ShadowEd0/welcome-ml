@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { SanitizedCard } from "./types";
 import { FloatingCard } from "./FloatingCard";
 import { useCardsContext } from "./CardsContext";

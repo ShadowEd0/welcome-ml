@@ -41,7 +41,7 @@ export const VisualCanvas: React.FC<VisualCanvasProps> = ({ effects, quality = '
     <canvas
       ref={canvasRef}
       className={`fixed inset-0 pointer-events-auto z-0 ${className}`}
-      style={{ touchAction: 'none' }}
+      style={{ position: 'fixed', inset: 0, zIndex: 0, touchAction: 'none' }}
     />
   );
 };

@@ -1,4 +1,5 @@
 import { IEffect, EffectConfig, QualityLevel, RenderContext, ViewportSize, PointerState } from './types';
+import { BaseEffect } from './BaseEffect';
 import { EffectFactory } from './EffectFactory';
 
 export class VisualEngine {
@@ -19,6 +20,7 @@ export class VisualEngine {
   public initialize(canvas: HTMLCanvasElement, quality: QualityLevel = 'AUTO'): void {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
+    if (!this.ctx) return;
     this.quality = quality;
     this.updateQualityMultiplier();
 
@@ -71,7 +73,7 @@ export class VisualEngine {
   private reinitializeEffects(): void {
     const renderCtx = this.getRenderContext(0);
     for (const effect of this.effects) {
-      effect.initialize(renderCtx, (effect as unknown as { config: EffectConfig }).config || { type: effect.type });
+      effect.initialize(renderCtx, (effect as BaseEffect<unknown>).getConfig());
     }
   }
 
@@ -132,7 +134,7 @@ export class VisualEngine {
   }
 
   private handleResize = (): void => {
-    if (!this.canvas) return;
+    if (!this.canvas || !this.ctx) return;
 
     const width = window.innerWidth;
     const height = window.innerHeight;
@@ -145,9 +147,7 @@ export class VisualEngine {
     this.canvas.style.width = `${width}px`;
     this.canvas.style.height = `${height}px`;
 
-    if (this.ctx) {
-      this.ctx.scale(dpr, dpr);
-    }
+    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     for (let i = 0; i < this.effects.length; i++) {
       this.effects[i].resize(this.viewport);
@@ -156,6 +156,7 @@ export class VisualEngine {
 
   private handleVisibilityChange = (): void => {
     this.isPaused = document.hidden;
+    if (!this.isPaused) this.lastTime = performance.now();
   };
 
   private handlePointerMove = (e: MouseEvent): void => {
@@ -190,6 +191,11 @@ export class VisualEngine {
 
     window.removeEventListener('resize', this.handleResize);
     document.removeEventListener('visibilitychange', this.handleVisibilityChange);
+    if (this.canvas) {
+      this.canvas.removeEventListener('mousemove', this.handlePointerMove);
+      this.canvas.removeEventListener('mouseleave', this.handlePointerLeave);
+      this.canvas.removeEventListener('touchmove', this.handleTouchMove);
+    }
 
     this.clearEffects();
     this.canvas = null;

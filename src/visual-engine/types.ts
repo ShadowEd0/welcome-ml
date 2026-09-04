@@ -22,6 +22,7 @@ export interface RenderContext {
 }
 
 export interface EffectConfig {
+  id?: string;
   type: string;
   enabled?: boolean;
   color?: string | string[];

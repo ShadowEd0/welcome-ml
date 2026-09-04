@@ -22,6 +22,10 @@ export abstract class BaseEffect<TParticle> implements IEffect {
     this.config = { ...this.config, ...config };
   }
 
+  public getConfig(): EffectConfig {
+    return this.config;
+  }
+
   public resize(viewport: ViewportSize): void {
     this.viewport = viewport;
   }

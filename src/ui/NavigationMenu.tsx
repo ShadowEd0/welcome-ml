@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { SettingsPanel, UserPreferences } from '../settings/SettingsPanel';
+import { CardGallery } from '../cards';
 
 type Tab = 'Experience' | 'Visuals' | 'Cards' | 'Customize';
 
@@ -112,9 +113,7 @@ export const NavigationMenu: React.FC<NavigationMenuProps> = ({
             </div>
           )}
           {activeTab === 'Cards' && (
-            <div style={{ color: '#DDD', fontSize: '0.9rem' }}>
-              <p>Explore floating 3D cards containing quotes and characters.</p>
-            </div>
+            <CardGallery />
           )}
         </div>
 

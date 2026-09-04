@@ -3,9 +3,9 @@ import { OpeningSequence, MenuButton, NavigationMenu, UserPreferences } from './
 import { VisualCanvas } from './visual-engine/VisualCanvas';
 import { UniverseRegistry } from './universes/UniverseRegistry';
 import { Randomizer } from './universes/Randomizer';
-import { FloatingCardsLayer } from './cards/FloatingCardsLayer';
+import { CardViewer, FloatingCardsLayer } from './cards';
 import { CardsProvider } from './cards/CardsContext';
-import { VisualEffectConfig } from './core/contracts';
+import { EffectConfig } from './visual-engine/types';
 import { UniverseConfig } from './universes/types';
 
 const PREFS_STORAGE_KEY = 'welcome_ml_user_prefs';
@@ -20,6 +20,24 @@ const DEFAULT_PREFERENCES: UserPreferences = {
   floatingCardCount: 3,
 };
 
+function loadPreferences(): UserPreferences {
+  try {
+    const raw: unknown = JSON.parse(localStorage.getItem(PREFS_STORAGE_KEY) || 'null');
+    if (!raw || typeof raw !== 'object') return DEFAULT_PREFERENCES;
+    const saved = raw as Partial<UserPreferences>;
+    return {
+      universeId: typeof saved.universeId === 'string' ? saved.universeId : DEFAULT_PREFERENCES.universeId,
+      intensity: typeof saved.intensity === 'number' && saved.intensity >= 0.2 && saved.intensity <= 2 ? saved.intensity : DEFAULT_PREFERENCES.intensity,
+      speed: typeof saved.speed === 'number' && saved.speed >= 0.2 && saved.speed <= 2 ? saved.speed : DEFAULT_PREFERENCES.speed,
+      quality: ['AUTO', 'LOW', 'MEDIUM', 'HIGH', 'ULTRA'].includes(saved.quality || '') ? saved.quality as UserPreferences['quality'] : DEFAULT_PREFERENCES.quality,
+      floatingCardsEnabled: typeof saved.floatingCardsEnabled === 'boolean' ? saved.floatingCardsEnabled : DEFAULT_PREFERENCES.floatingCardsEnabled,
+      floatingCardCount: typeof saved.floatingCardCount === 'number' ? Math.max(1, Math.min(3, Math.round(saved.floatingCardCount))) : DEFAULT_PREFERENCES.floatingCardCount,
+    };
+  } catch {
+    return DEFAULT_PREFERENCES;
+  }
+}
+
 export const App: React.FC = () => {
   const [showOpening, setShowOpening] = useState<boolean>(true);
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
@@ -30,14 +48,7 @@ export const App: React.FC = () => {
   const [universesList, setUniversesList] = useState<Array<{ id: string; name: string }>>([]);
   const [currentUniverse, setCurrentUniverse] = useState<UniverseConfig | null>(null);
 
-  const [preferences, setPreferences] = useState<UserPreferences>(() => {
-    try {
-      const saved = localStorage.getItem(PREFS_STORAGE_KEY);
-      return saved ? { ...DEFAULT_PREFERENCES, ...JSON.parse(saved) } : DEFAULT_PREFERENCES;
-    } catch {
-      return DEFAULT_PREFERENCES;
-    }
-  });
+  const [preferences, setPreferences] = useState<UserPreferences>(loadPreferences);
 
   const timerRef = useRef<number | null>(null);
 
@@ -125,26 +136,45 @@ export const App: React.FC = () => {
   }, [currentUniverse, randomizer, handleUpdatePreferences]);
 
   // Conversion explicite vers VisualEffectConfig[] (type réel de core/contracts)
-  const activeEffects: VisualEffectConfig[] = (currentUniverse?.effects || []).map((eff) => ({
-    id: String(eff.id || eff.type),
-    type: String(eff.type),
-    enabled: eff.enabled ?? true,
-    params: {
-      ...(eff.params || {}),
-      speedMultiplier: preferences.speed,
-      densityMultiplier: preferences.intensity,
-    },
-  }));
+  const activeEffects: EffectConfig[] = (currentUniverse?.effects || []).map((eff) => {
+    const extraParams = typeof eff.params === 'object' && eff.params !== null
+      ? eff.params as Record<string, unknown>
+      : {};
+    return {
+      ...extraParams,
+      id: String(eff.id || eff.type),
+      type: String(eff.type),
+      enabled: eff.enabled ?? true,
+      color: eff.color ?? [currentUniverse?.palette.primary ?? '#ffffff', currentUniverse?.palette.accent ?? '#ffffff'],
+      speed: (typeof eff.speed === 'number' ? eff.speed : 1) * (currentUniverse?.speed ?? 1) * preferences.speed,
+      count: Math.max(1, Math.round((typeof eff.count === 'number' ? eff.count : 50) * (currentUniverse?.density ?? 1) * preferences.intensity)),
+    };
+  });
+
+  const background = currentUniverse?.background;
+  const backgroundStyle = background
+    ? background.type === 'radial'
+      ? `radial-gradient(circle at ${background.glowPosition?.x ?? 50}% ${background.glowPosition?.y ?? 50}%, ${background.colors.join(', ')})`
+      : `linear-gradient(${background.angle ?? 180}deg, ${background.colors.join(', ')})`
+    : '#000000';
+  const universeStyle = currentUniverse ? {
+    '--u-primary': currentUniverse.palette.primary,
+    '--u-secondary': currentUniverse.palette.secondary,
+    '--u-accent': currentUniverse.palette.accent,
+    '--u-text': currentUniverse.palette.textColor,
+    '--u-glow': currentUniverse.palette.glowColor,
+    background: backgroundStyle,
+  } as React.CSSProperties : { background: backgroundStyle };
 
   return (
     <CardsProvider>
-      <div style={{ width: '100vw', height: '100vh', overflow: 'hidden', position: 'relative', backgroundColor: '#000000' }}>
+      <div style={{ width: '100vw', minHeight: '100dvh', height: '100vh', overflow: 'hidden', position: 'relative', ...universeStyle }}>
         {showOpening && (
           <OpeningSequence onComplete={() => setShowOpening(false)} />
         )}
 
         <VisualCanvas
-          effects={activeEffects as any}
+          effects={activeEffects}
           quality={preferences.quality}
         />
 
@@ -173,6 +203,7 @@ export const App: React.FC = () => {
             />
           </>
         )}
+        <CardViewer />
       </div>
     </CardsProvider>
   );
