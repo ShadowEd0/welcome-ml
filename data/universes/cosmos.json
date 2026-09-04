@@ -1,0 +1,32 @@
+{
+  "id": "cosmos",
+  "name": "Cosmos",
+  "palette": {
+    "primary": "#8A2BE2",
+    "secondary": "#4B0082",
+    "accent": "#00FFFF",
+    "backgroundGradient": ["#030214", "#0A0520", "#010008"],
+    "glowColor": "rgba(138, 43, 226, 0.6)",
+    "textColor": "#E2E8F0",
+    "cardBorderColor": "rgba(0, 255, 255, 0.3)"
+  },
+  "background": {
+    "type": "gradient",
+    "colors": ["#030214", "#0A0520", "#010008"],
+    "angle": 135
+  },
+  "effects": [
+    { "type": "stars", "count": 120, "color": ["#FFFFFF", "#00FFFF", "#E2E8F0"], "speed": 0.8 },
+    { "type": "shooting_stars", "color": "#00FFFF", "speed": 1.2 },
+    { "type": "glow", "color": "#8A2BE2", "opacity": 0.3 }
+  ],
+  "atmosphere": {
+    "blurLevel": 0,
+    "opacity": 1.0,
+    "ambientLight": "rgba(138, 43, 226, 0.1)"
+  },
+  "intensity": 1.0,
+  "speed": 1.0,
+  "density": 1.0,
+  "compatibleWith": ["fantasy", "enchanted"]
+}

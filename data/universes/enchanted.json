@@ -1,0 +1,31 @@
+{
+  "id": "enchanted",
+  "name": "Enchanted",
+  "palette": {
+    "primary": "#50C878",
+    "secondary": "#2E8B57",
+    "accent": "#ADFF2F",
+    "backgroundGradient": ["#03140A", "#082615", "#010A05"],
+    "glowColor": "rgba(173, 255, 47, 0.5)",
+    "textColor": "#F0FFF0",
+    "cardBorderColor": "rgba(80, 200, 120, 0.35)"
+  },
+  "background": {
+    "type": "gradient",
+    "colors": ["#03140A", "#082615", "#010A05"],
+    "angle": 180
+  },
+  "effects": [
+    { "type": "fireflies", "count": 50, "color": "#ADFF2F", "speed": 1.0 },
+    { "type": "butterflies", "count": 12, "color": "#50C878", "speed": 0.8, "interactive": true }
+  ],
+  "atmosphere": {
+    "blurLevel": 0,
+    "opacity": 1.0,
+    "ambientLight": "rgba(80, 200, 120, 0.12)"
+  },
+  "intensity": 1.0,
+  "speed": 0.8,
+  "density": 1.0,
+  "compatibleWith": ["cosmos", "fantasy", "sakura"]
+}

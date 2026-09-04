@@ -1,0 +1,31 @@
+{
+  "id": "dream",
+  "name": "Dream",
+  "palette": {
+    "primary": "#E6E6FA",
+    "secondary": "#D8BFD8",
+    "accent": "#FFF0F5",
+    "backgroundGradient": ["#10051A", "#200A33", "#08020D"],
+    "glowColor": "rgba(230, 230, 250, 0.5)",
+    "textColor": "#F8F8FF",
+    "cardBorderColor": "rgba(216, 191, 216, 0.4)"
+  },
+  "background": {
+    "type": "gradient",
+    "colors": ["#10051A", "#200A33", "#08020D"],
+    "angle": 140
+  },
+  "effects": [
+    { "type": "stars", "count": 100, "color": "#E6E6FA", "speed": 0.5 },
+    { "type": "mist", "count": 4, "color": "#D8BFD8", "opacity": 0.2 }
+  ],
+  "atmosphere": {
+    "blurLevel": 0,
+    "opacity": 1.0,
+    "ambientLight": "rgba(230, 230, 250, 0.1)"
+  },
+  "intensity": 1.0,
+  "speed": 0.7,
+  "density": 1.0,
+  "compatibleWith": ["cosmos", "fantasy"]
+}

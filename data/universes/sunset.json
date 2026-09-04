@@ -1,0 +1,31 @@
+{
+  "id": "sunset",
+  "name": "Sunset",
+  "palette": {
+    "primary": "#FF4500",
+    "secondary": "#FF8C00",
+    "accent": "#FFD700",
+    "backgroundGradient": ["#2B0B1E", "#4A1226", "#1C0512"],
+    "glowColor": "rgba(255, 69, 0, 0.5)",
+    "textColor": "#FFF8DC",
+    "cardBorderColor": "rgba(255, 140, 0, 0.4)"
+  },
+  "background": {
+    "type": "gradient",
+    "colors": ["#2B0B1E", "#4A1226", "#1C0512"],
+    "angle": 120
+  },
+  "effects": [
+    { "type": "particles", "count": 55, "color": "#FFD700", "speed": 0.6 },
+    { "type": "glow", "color": "#FF4500", "opacity": 0.35 }
+  ],
+  "atmosphere": {
+    "blurLevel": 0,
+    "opacity": 1.0,
+    "ambientLight": "rgba(255, 140, 0, 0.15)"
+  },
+  "intensity": 1.0,
+  "speed": 0.7,
+  "density": 1.0,
+  "compatibleWith": ["love", "sakura", "ocean"]
+}

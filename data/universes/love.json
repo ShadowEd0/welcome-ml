@@ -1,0 +1,30 @@
+{
+  "id": "love",
+  "name": "Love",
+  "palette": {
+    "primary": "#FF1493",
+    "secondary": "#FF69B4",
+    "accent": "#FFD700",
+    "backgroundGradient": ["#200311", "#3B0822", "#12010A"],
+    "glowColor": "rgba(255, 20, 147, 0.6)",
+    "textColor": "#FFE4E1",
+    "cardBorderColor": "rgba(255, 105, 180, 0.4)"
+  },
+  "background": {
+    "type": "radial",
+    "colors": ["#3B0822", "#200311", "#12010A"]
+  },
+  "effects": [
+    { "type": "hearts", "count": 45, "color": "#FF1493", "speed": 0.9, "size": 1.2 },
+    { "type": "glow", "color": "#FFD700", "opacity": 0.25 }
+  ],
+  "atmosphere": {
+    "blurLevel": 0,
+    "opacity": 1.0,
+    "ambientLight": "rgba(255, 20, 147, 0.15)"
+  },
+  "intensity": 1.1,
+  "speed": 0.9,
+  "density": 1.0,
+  "compatibleWith": ["sakura", "sunset"]
+}

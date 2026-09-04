@@ -1,0 +1,31 @@
+{
+  "id": "sakura",
+  "name": "Sakura",
+  "palette": {
+    "primary": "#FFB7C5",
+    "secondary": "#FF69B4",
+    "accent": "#FFF0F5",
+    "backgroundGradient": ["#1A0B18", "#2C1226", "#0F050E"],
+    "glowColor": "rgba(255, 183, 197, 0.5)",
+    "textColor": "#FFF0F5",
+    "cardBorderColor": "rgba(255, 183, 197, 0.4)"
+  },
+  "background": {
+    "type": "gradient",
+    "colors": ["#1A0B18", "#2C1226", "#0F050E"],
+    "angle": 160
+  },
+  "effects": [
+    { "type": "petals", "count": 60, "color": "#FFB7C5", "speed": 1.0, "size": 1.1 },
+    { "type": "particles", "count": 40, "color": "#FFF0F5", "speed": 0.5 }
+  ],
+  "atmosphere": {
+    "blurLevel": 0,
+    "opacity": 0.95,
+    "ambientLight": "rgba(255, 105, 180, 0.12)"
+  },
+  "intensity": 1.0,
+  "speed": 1.0,
+  "density": 1.0,
+  "compatibleWith": ["love", "sunset", "enchanted"]
+}

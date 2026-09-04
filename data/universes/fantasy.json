@@ -1,0 +1,30 @@
+{
+  "id": "fantasy",
+  "name": "Fantasy",
+  "palette": {
+    "primary": "#DA70D6",
+    "secondary": "#BA55D3",
+    "accent": "#00FA9A",
+    "backgroundGradient": ["#190826", "#2D0D45", "#0E0317"],
+    "glowColor": "rgba(218, 112, 214, 0.6)",
+    "textColor": "#F8F8FF",
+    "cardBorderColor": "rgba(0, 250, 154, 0.4)"
+  },
+  "background": {
+    "type": "radial",
+    "colors": ["#2D0D45", "#190826", "#0E0317"]
+  },
+  "effects": [
+    { "type": "butterflies", "count": 15, "color": "#DA70D6", "speed": 1.0, "interactive": true },
+    { "type": "stars", "count": 80, "color": ["#00FA9A", "#DA70D6"], "speed": 0.7 }
+  ],
+  "atmosphere": {
+    "blurLevel": 0,
+    "opacity": 1.0,
+    "ambientLight": "rgba(186, 85, 211, 0.15)"
+  },
+  "intensity": 1.1,
+  "speed": 1.0,
+  "density": 1.1,
+  "compatibleWith": ["cosmos", "enchanted", "ocean"]
+}
