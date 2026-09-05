@@ -127,6 +127,12 @@ export const App: React.FC = () => {
     }
   }, [currentUniverse, randomizer, handleUpdatePreferences]);
 
+  // Référence stable : évite que l'effet de timers d'OpeningSequence
+  // (dépendant de onComplete) soit relancé à chaque render d'App.
+  const handleOpeningComplete = useCallback(() => {
+    setShowOpening(false);
+  }, []);
+
   // Mémoïsé : évite de recréer le tableau (et donc de recharger tous les
   // effets du moteur via VisualCanvas) à chaque render sans rapport
   // (ouverture du menu, viewer de cartes…). Recréé uniquement quand
@@ -170,7 +176,7 @@ export const App: React.FC = () => {
     <CardsProvider>
       <div style={{ width: '100vw', minHeight: '100dvh', height: '100vh', overflow: 'hidden', position: 'relative', ...universeStyle }}>
         {showOpening && (
-          <OpeningSequence onComplete={() => setShowOpening(false)} />
+          <OpeningSequence onComplete={handleOpeningComplete} />
         )}
 
         <VisualCanvas

@@ -90,7 +90,7 @@ export function CardViewer() {
         </button>
 
         <div className="card-viewer-stage">
-          <FlipCard card={activeCard} imageLoading="eager" flippable className="flip-card--enlarged" />
+          <FlipCard key={activeCard.id} card={activeCard} imageLoading="eager" flippable className="flip-card--enlarged" />
           <CardAnimationOverlay animation={activeCard.animation} />
         </div>
 
