@@ -54,15 +54,18 @@ export function CardsProvider({
     [cardsState.cards, viewer.activeCardId]
   );
 
-  const value: CardsContextValue = {
-    ...cardsState,
-    viewer,
-    openCard,
-    closeViewer,
-    showNext,
-    showPrevious,
-    activeCard,
-  };
+  const value = useMemo<CardsContextValue>(
+    () => ({
+      ...cardsState,
+      viewer,
+      openCard,
+      closeViewer,
+      showNext,
+      showPrevious,
+      activeCard,
+    }),
+    [cardsState, viewer, openCard, closeViewer, showNext, showPrevious, activeCard]
+  );
 
   return <CardsContext.Provider value={value}>{children}</CardsContext.Provider>;
 }
