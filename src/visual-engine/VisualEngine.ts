@@ -6,6 +6,7 @@ export class VisualEngine {
   private canvas: HTMLCanvasElement | null = null;
   private ctx: CanvasRenderingContext2D | null = null;
   private effects: IEffect[] = [];
+  private targetEffects: IEffect[] | null = null;
   private animationFrameId: number | null = null;
 
   private quality: QualityLevel = 'AUTO';
@@ -70,10 +71,34 @@ export class VisualEngine {
     }
   }
 
+  public prepareTransition(effectConfigs: EffectConfig[]): void {
+    this.clearTargetEffects();
+    this.targetEffects = this.createTargetEffects(effectConfigs);
+  }
+
+  private createTargetEffects(effectConfigs: EffectConfig[]): IEffect[] {
+    const renderCtx = this.getRenderContext(0);
+    const targets: IEffect[] = [];
+    for (const config of effectConfigs) {
+      if (config.enabled === false) continue;
+      const effect = EffectFactory.createEffect(config);
+      if (effect) {
+        effect.initialize(renderCtx, config);
+        targets.push(effect);
+      }
+    }
+    return targets;
+  }
+
   private reinitializeEffects(): void {
     const renderCtx = this.getRenderContext(0);
     for (const effect of this.effects) {
       effect.initialize(renderCtx, (effect as BaseEffect<unknown>).getConfig());
+    }
+    if (this.targetEffects) {
+      for (const effect of this.targetEffects) {
+        effect.initialize(renderCtx, (effect as BaseEffect<unknown>).getConfig());
+      }
     }
   }
 
@@ -181,11 +206,22 @@ export class VisualEngine {
     }
   };
 
-  public clearEffects(): void {
-    for (let i = 0; i < this.effects.length; i++) {
-      this.effects[i].destroy();
+  private destroyEffectList(effects: IEffect[]): void {
+    for (let i = 0; i < effects.length; i++) {
+      effects[i].destroy();
     }
+  }
+
+  public clearEffects(): void {
+    this.destroyEffectList(this.effects);
     this.effects = [];
+  }
+
+  public clearTargetEffects(): void {
+    if (this.targetEffects) {
+      this.destroyEffectList(this.targetEffects);
+      this.targetEffects = null;
+    }
   }
 
   public destroy(): void {
@@ -202,6 +238,7 @@ export class VisualEngine {
     }
 
     this.clearEffects();
+    this.clearTargetEffects();
     this.canvas = null;
     this.ctx = null;
   }
