@@ -1,26 +1,26 @@
 [
   {
     "id": "card-001",
-    "image": "assets/cards/example-01.webp",
-    "character": "Character Name",
-    "anime": "Anime Title",
+    "image": "cards_img/card1.jpg",
+    "character": "Je ne sais pas",
+    "anime": "Teen Titan",
     "quote": "A short, memorable line that captures the character.",
     "author": "Character Name",
     "animation": "heart_burst"
   },
   {
     "id": "card-002",
-    "image": "assets/cards/example-02.webp",
-    "character": "Another Character",
-    "anime": "Another Anime",
+    "image": "cards_img/card2.jpg",
+    "character": "Test",
+    "anime": "Sword Art Online",
     "quote": "Author is optional — this card omits it and the UI hides that field automatically.",
     "animation": "fireflies"
   },
   {
     "id": "card-003",
-    "image": "assets/cards/example-03.webp",
+    "image": "cards_img/card3.jpg",
     "character": "Third Character",
-    "anime": "Third Anime",
+    "anime": "Hotel Transylvanie",
     "quote": "An unrecognized animation name safely falls back to \"none\" instead of breaking the card.",
     "animation": "this-animation-does-not-exist"
   }
