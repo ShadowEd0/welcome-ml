@@ -1,4 +1,5 @@
 [
+<<<<<<< Updated upstream
   {
     "id": "card-001",
     "image": "assets/cards/example-01.webp",
@@ -25,3 +26,69 @@
     "animation": "this-animation-does-not-exist"
   }
 ]
+=======
+    {
+        "id": "card-001",
+        "image": "../../data/cards_img/card1.webp",
+        "character": "Je ne sais pas",
+        "anime": "Teen Titan",
+        "quote": "A short, memorable line that captures the character.",
+        "author": "Character Name",
+        "animation": "stars"
+    },
+    {
+        "id": "card-002",
+        "image": "../../data/cards_img/card2.webp",
+        "character": "Test",
+        "anime": "Sword Art Online",
+        "quote": "unknown",
+        "animation": "butterflies",
+        "author": "unknown"
+    },
+    {
+        "id": "card-003",
+        "image": "../../data/cards_img/card3.webp",
+        "character": "unknown",
+        "anime": "Hotel Transylvanie",
+        "quote": "unknown",
+        "animation": "fireflies",
+        "author": " "
+    },
+    {
+        "id": "card-004",
+        "image": "../../data/cards_img/card4.webp",
+        "character": "unknown",
+        "anime": "Kung fu Panda",
+        "quote": "unknown",
+        "animation": "sparkles",
+        "author": "unknown"
+    },
+    {
+        "id": "card-005",
+        "image": "../../data/cards_img/card5.webp",
+        "character": "Deku",
+        "anime": "My Hero Academia",
+        "quote": "unknown",
+        "animation": "confetti",
+        "author": "unknown"
+    },
+    {
+        "id": "card-006",
+        "image": "../../data/cards_img/card6.webp",
+        "character": "Mikasa Ackerman",
+        "anime": "Attack des titans",
+        "quote": "unknown",
+        "animation": "heart_burst",
+        "author": "unknown"
+    },
+    {
+        "id": "card-007",
+        "image": "../../data/cards_img/card7.webp",
+        "character": "unknown",
+        "anime": "Naruto",
+        "quote": "unknown",
+        "animation": "petals",
+        "author": "unknown"
+    }
+]
+>>>>>>> Stashed changes

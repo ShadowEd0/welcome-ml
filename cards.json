@@ -1,0 +1,83 @@
+[
+    {
+        "id": "card-001",
+        "image": "../../data/cards_img/card1.webp",
+        "character": "Je ne sais pas",
+        "anime": "Teen Titan",
+        "quote": "A short, memorable line that captures the character.",
+        "author": "Character Name",
+        "animation": "confetti"
+    },
+    {
+        "id": "card-002",
+        "image": "../../data/cards_img/card2.webp",
+        "character": "Test",
+        "anime": "Sword Art Online",
+        "quote": "",
+        "animation": "sparkles",
+        "author": "none"
+    },
+    {
+        "id": "card-003",
+        "image": "../../data/cards_img/card3.webp",
+        "character": "unknown",
+        "anime": "Hotel Transylvanie",
+        "quote": "none",
+        "animation": "petals",
+        "author": "none"
+    },
+    {
+        "id": "card-004",
+        "image": "../../data/cards_img/card4.webp",
+        "character": "unknown",
+        "anime": "Kung fu Panda",
+        "quote": "none",
+        "animation": "butterflies",
+        "author": "none"
+    },
+    {
+        "id": "card-005",
+        "image": "../../data/cards_img/card5.webp",
+        "character": "unknown",
+        "anime": "unknown",
+        "quote": "none",
+        "animation": "heart_burst",
+        "author": "none"
+    },
+    {
+        "id": "card-006",
+        "image": "../../data/cards_img/card6.webp",
+        "character": "unknown",
+        "anime": "unknown",
+        "quote": "none",
+        "animation": "stars",
+        "author": "none"
+    },
+    {
+        "id": "card-007",
+        "image": "../../data/cards_img/card7.webp",
+        "character": "unknown",
+        "anime": "unknown",
+        "quote": "none",
+        "animation": "fireflies",
+        "author": "none"
+    },
+    {
+        "id": "card-008",
+        "image": "F:/Projets/ML/Sites/site vibe coder/fichiers du site/site complet/data/F:\\Projets\\ML\\Sites\\site vibe coder\\fichiers du site\\site complet\\data\\cards_img\\card8.webp",
+        "character": "unknown",
+        "anime": "unknown",
+        "quote": "unknown",
+        "animation": "confetti",
+        "author": "unknown"
+    },
+    {
+        "id": "card-009",
+        "image": "F:/Projets/ML/Sites/site vibe coder/fichiers du site/site complet/data/F:\\Projets\\ML\\Sites\\site vibe coder\\fichiers du site\\site complet\\data\\cards_img\\card9.webp",
+        "character": "unknown",
+        "anime": "unknown",
+        "quote": "unknown",
+        "animation": "stars",
+        "author": "unknown"
+    }
+]
