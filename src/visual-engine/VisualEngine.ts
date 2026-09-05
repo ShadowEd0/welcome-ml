@@ -96,27 +96,24 @@ export class VisualEngine {
     return targets;
   }
 
-  public startCrossfade(duration: number): void {
+    public startCrossfade(duration: number): void {
+    // Guard: no target prepared → nothing to crossfade into
     if (!this.targetEffects || this.targetEffects.length === 0) return;
 
-    // If a transition is already active, clean up the old target
-    // The current `effects` remains as the source
-    if (this.transitionActive) {
-      // Current effects stay as source, just replace target
+    // Set initial opacities
+    // Source (effects) starts fully visible, Target (targetEffects) starts invisible
+    for (const effect of this.effects) {
+      (effect as BaseEffect<unknown>).setTransitionOpacity(1);
+    }
+
+    for (const effect of this.targetEffects) {
+      (effect as BaseEffect<unknown>).setTransitionOpacity(0);
     }
 
     this.transitionDuration = duration;
     this.transitionStartTime = performance.now();
     this.transitionProgress = 0;
     this.transitionActive = true;
-
-    // Set initial opacities
-    for (const effect of this.effects) {
-      (effect as BaseEffect<unknown>).setTransitionOpacity(1);
-    }
-    for (const effect of this.targetEffects) {
-      (effect as BaseEffect<unknown>).setTransitionOpacity(0);
-    }
   }
 
   private finishCrossfade(): void {
@@ -207,6 +204,17 @@ export class VisualEngine {
       this.ctx.globalAlpha *= (effect as BaseEffect<unknown>).getTransitionOpacity();
       effect.render(renderCtx);
       this.ctx.restore();
+    }
+
+    // Render target effects during crossfade
+    if (this.transitionActive && this.targetEffects) {
+      for (let i = 0; i < this.targetEffects.length; i++) {
+        const effect = this.targetEffects[i];
+        this.ctx.save();
+        this.ctx.globalAlpha *= (effect as BaseEffect<unknown>).getTransitionOpacity();
+        effect.render(renderCtx);
+        this.ctx.restore();
+      }
     }
   }
 
