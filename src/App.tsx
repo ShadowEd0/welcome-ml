@@ -3,6 +3,7 @@ import { OpeningSequence, MenuButton, NavigationMenu, UserPreferences } from './
 import { VisualCanvas } from './visual-engine/VisualCanvas';
 import { UniverseRegistry } from './universes/UniverseRegistry';
 import { Randomizer } from './universes/Randomizer';
+import { SceneTransitionManager } from './universes/SceneTransitionManager';
 import { CardViewer, FloatingCardsLayer } from './cards';
 import { CardsProvider } from './cards/CardsContext';
 import { EffectConfig } from './visual-engine/types';
@@ -51,14 +52,58 @@ export const App: React.FC = () => {
   const [preferences, setPreferences] = useState<UserPreferences>(loadPreferences);
 
   const timerRef = useRef<number | null>(null);
+  const transitionManagerRef = useRef<SceneTransitionManager | null>(null);
+  const isTransitioningRef = useRef(false);
 
   useEffect(() => {
     const allUniverses: UniverseConfig[] = registry.getAllUniverses();
     setUniversesList(allUniverses.map((u: UniverseConfig) => ({ id: u.id, name: u.name || u.id })));
 
+    // Ne pas charger l'univers via le useEffect si une transition est en cours vers cet univers
+    if (isTransitioningRef.current) return;
+
     const initialUni = registry.getUniverse(preferences.universeId) || allUniverses[0] || null;
     setCurrentUniverse(initialUni);
   }, [registry, preferences.universeId]);
+
+  // Change l'univers avec une transition animée des couleurs CSS.
+  // Le manager annule automatiquement toute transition précédente via RAF.
+  const changeUniverseWithTransition = useCallback((toId: string) => {
+    if (isTransitioningRef.current) return;
+
+    const from = currentUniverse;
+    const to = registry.getUniverse(toId);
+    if (!from || !to || from.id === to.id) return;
+
+    isTransitioningRef.current = true;
+
+    // Mettre à jour les préférences immédiatement pour l'UI
+    setPreferences(prev => ({ ...prev, universeId: toId }));
+
+    const manager = new SceneTransitionManager();
+    transitionManagerRef.current = manager;
+
+    manager.startTransition(
+      from,
+      to,
+      1.5,
+      (config) => {
+        // Pendant la transition : interpoler les couleurs CSS
+        const root = document.documentElement;
+        root.style.setProperty('--u-primary', config.palette.primary);
+        root.style.setProperty('--u-secondary', config.palette.secondary);
+        root.style.setProperty('--u-accent', config.palette.accent);
+        root.style.setProperty('--u-text', config.palette.textColor);
+        root.style.setProperty('--u-glow', config.palette.glowColor);
+      },
+      () => {
+        // Fin de transition : charger le nouvel univers dans le VisualEngine
+        setCurrentUniverse(to);
+        isTransitioningRef.current = false;
+        transitionManagerRef.current = null;
+      }
+    );
+  }, [currentUniverse, registry]);
 
   const resetSevenMinuteTimer = useCallback(() => {
     if (timerRef.current !== null) {
@@ -101,13 +146,10 @@ export const App: React.FC = () => {
     setPreferences((prev: UserPreferences) => ({ ...prev, ...updated }));
 
     if (updated.universeId) {
-      const selected = registry.getUniverse(updated.universeId);
-      if (selected) {
-        setCurrentUniverse(selected);
-        resetSevenMinuteTimer();
-      }
+      changeUniverseWithTransition(updated.universeId);
+      resetSevenMinuteTimer();
     }
-  }, [registry, resetSevenMinuteTimer]);
+  }, [changeUniverseWithTransition, resetSevenMinuteTimer]);
 
   const handleResetPreferences = useCallback(() => {
     setPreferences(DEFAULT_PREFERENCES);
@@ -123,9 +165,10 @@ export const App: React.FC = () => {
     if (!currentUniverse) return;
     const nextUni = randomizer.getRandomUniverse(currentUniverse.id);
     if (nextUni) {
-      handleUpdatePreferences({ universeId: nextUni.id });
+      changeUniverseWithTransition(nextUni.id);
+      resetSevenMinuteTimer();
     }
-  }, [currentUniverse, randomizer, handleUpdatePreferences]);
+  }, [currentUniverse, randomizer, changeUniverseWithTransition, resetSevenMinuteTimer]);
 
   // Référence stable : évite que l'effet de timers d'OpeningSequence
   // (dépendant de onComplete) soit relancé à chaque render d'App.
