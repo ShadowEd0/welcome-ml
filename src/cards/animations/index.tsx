@@ -16,6 +16,7 @@ const PARTICLE_COUNT: Partial<Record<CardAnimation, number>> = {
   butterflies: 4,
   fireflies: 8,
   stars: 12,
+  glow: 8,
   confetti: 16,
 };
 
@@ -26,6 +27,7 @@ const GLYPH: Partial<Record<CardAnimation, string>> = {
   butterflies: "❋",
   fireflies: "•",
   stars: "✶",
+  glow: "✧",
   confetti: "▪",
 };
 

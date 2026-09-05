@@ -9,10 +9,10 @@
  * package name/alias in the final workspace (e.g. "@welcome-ml/core").
  */
 import type { CardAnimation, CardConfig, Identifier } from "../core";
-import { KNOWN_CARD_ANIMATIONS, normalizeCardAnimation } from "../core";
+import { KNOWN_CARD_ANIMATIONS, RANDOMIZABLE_ANIMATIONS, normalizeCardAnimation } from "../core";
 
 export type { CardAnimation, CardConfig, Identifier };
-export { KNOWN_CARD_ANIMATIONS, normalizeCardAnimation };
+export { KNOWN_CARD_ANIMATIONS, RANDOMIZABLE_ANIMATIONS, normalizeCardAnimation };
 
 /** A card after JSON has been validated/sanitized — safe to render. */
 export interface SanitizedCard extends CardConfig {

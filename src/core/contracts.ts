@@ -26,6 +26,21 @@ export type CardAnimation =
   | "confetti"
   | "none";
 
+/**
+ * Animations eligible for random selection.
+ * Intentionally excludes "none" — a random pick should always produce a visible effect.
+ */
+export const RANDOMIZABLE_ANIMATIONS: readonly CardAnimation[] = [
+  "heart_burst",
+  "sparkles",
+  "petals",
+  "butterflies",
+  "fireflies",
+  "stars",
+  "glow",
+  "confetti",
+];
+
 export const KNOWN_CARD_ANIMATIONS: readonly CardAnimation[] = [
   "heart_burst",
   "sparkles",
@@ -53,5 +68,7 @@ export interface CardConfig {
   quote: string;
   author?: string;
   animation?: CardAnimation | (string & {});
+  /** If true, animation is chosen randomly from RANDOMIZABLE_ANIMATIONS at load time. */
+  randomAnimation?: boolean;
 }
 

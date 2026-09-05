@@ -1,4 +1,4 @@
-import { normalizeCardAnimation, type SanitizedCard } from "./types";
+import { normalizeCardAnimation, RANDOMIZABLE_ANIMATIONS, type SanitizedCard } from "./types";
 
 /**
  * Placeholder shown when a card is missing an image or its image fails to
@@ -68,7 +68,11 @@ export function validateCard(raw: unknown, index: number): SanitizedCard | null 
   }
 
   const author = isNonEmptyString(candidate.author) ? candidate.author : undefined;
-  const animation = normalizeCardAnimation(candidate.animation);
+  const randomAnimation = candidate.randomAnimation === true;
+
+  const animation = randomAnimation
+    ? RANDOMIZABLE_ANIMATIONS[Math.floor(Math.random() * RANDOMIZABLE_ANIMATIONS.length)]
+    : normalizeCardAnimation(candidate.animation);
 
   return { id, image, character, anime, quote, author, animation };
 }
