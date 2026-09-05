@@ -107,7 +107,11 @@ export class VisualEngine {
     const renderCtx = this.getRenderContext(0);
 
     for (let i = 0; i < this.effects.length; i++) {
-      this.effects[i].render(renderCtx);
+      const effect = this.effects[i];
+      this.ctx.save();
+      this.ctx.globalAlpha *= (effect as BaseEffect<unknown>).getTransitionOpacity();
+      effect.render(renderCtx);
+      this.ctx.restore();
     }
   }
 
