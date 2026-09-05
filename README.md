@@ -99,7 +99,7 @@ Il est recommandé d'utiliser :
 Exemple :
 
 ```text
-data/cards_img/manuella-01.webp
+data/cards_img/image-01.webp
 ```
 
 ---
