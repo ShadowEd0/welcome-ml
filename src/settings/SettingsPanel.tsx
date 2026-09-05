@@ -1,10 +1,11 @@
 import React from 'react';
+import type { QualityLevel } from '../core/contracts';
 
 export interface UserPreferences {
   universeId: string;
   intensity: number; // 0.1 - 2.0
   speed: number;     // 0.1 - 2.0
-  quality: 'AUTO' | 'LOW' | 'MEDIUM' | 'HIGH' | 'ULTRA';
+  quality: QualityLevel;
   floatingCardsEnabled: boolean;
   floatingCardCount: number; // 1 - 3
 }

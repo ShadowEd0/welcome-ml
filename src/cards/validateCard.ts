@@ -23,6 +23,24 @@ function isNonEmptyString(value: unknown): value is string {
 }
 
 /**
+ * Resolves a card image path so it works in every deployment context.
+ *
+ * data/cards.json stores project-relative paths ("../../data/cards_img/x.webp").
+ * Resolved against the page URL, "../../" only lands on /data/... when the site
+ * is served from a domain root. On GitHub Pages (https://user.github.io/repo/)
+ * it would climb above /repo/ and 404. Rewriting to BASE_URL-relative
+ * ("./data/cards_img/x.webp") works everywhere: dev ("/"), domain root and
+ * sub-paths, with no backend. Absolute URLs / data URIs are left untouched.
+ */
+export function resolveCardImagePath(image: string): string {
+  if (/^[a-z][a-z0-9+.-]*:/i.test(image)) return image; // http:, data:, blob:, …
+  if (image.startsWith("../")) {
+    return `${import.meta.env.BASE_URL}${image.replace(/^(?:\.\.\/)+/, "")}`;
+  }
+  return image; // already relative to the base, or root-absolute by design
+}
+
+/**
  * Turns one raw JSON entry from data/cards.json into a card that is safe to
  * render. Never throws. Returns null only when the entry is missing the
  * fields that make it identifiable/renderable at all (id, image, character,
@@ -40,7 +58,9 @@ export function validateCard(raw: unknown, index: number): SanitizedCard | null 
   const character = isNonEmptyString(candidate.character) ? candidate.character : "";
   const anime = isNonEmptyString(candidate.anime) ? candidate.anime : "";
   const quote = isNonEmptyString(candidate.quote) ? candidate.quote : "";
-  const image = isNonEmptyString(candidate.image) ? candidate.image : FALLBACK_CARD_IMAGE;
+  const image = isNonEmptyString(candidate.image)
+    ? resolveCardImagePath(candidate.image)
+    : FALLBACK_CARD_IMAGE;
 
   if (!character || !anime || !quote) {
     console.warn(`[cards] entry "${id}" is missing required text fields — skipped.`);

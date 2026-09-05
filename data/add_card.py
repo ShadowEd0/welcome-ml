@@ -1,88 +1,196 @@
-import sys, pathlib, random, json
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Gestion des cartes du site via data/cards.json.
 
-absolute = "F:/Projets/ML/Sites/site vibe coder/fichiers du site/site complet/data/"
+Usage:
+    python add_card.py                -> menu interactif
+    python add_card.py <n>            -> ajoute n cartes (raccourci)
+    python add_card.py add <n>        -> ajoute n cartes depuis cards_img/unused
+    python add_card.py complete       -> complète les champs manquants
+    python add_card.py animate        -> réattribue aléatoirement une animation par carte
 
-images = pathlib.Path(absolute+"cards_img/unused")
+Aucun chemin absolu n'est requis : tous les chemins sont déduits de
+l'emplacement de ce script, qui doit rester dans le dossier data/.
+"""
 
-animations = ["heart_burst",
-  "sparkles",
-  "petals",
-  "butterflies",
-  "fireflies",
-  "stars", 
-  "confetti"]
+import json
+import random
+import re
+import sys
+from pathlib import Path
 
-with open(absolute+"cards.json", "r", encoding="utf-8") as f:
-    cards = json.load(f)
-n = len(cards)
+DATA_DIR = Path(__file__).resolve().parent  # dossier data/
+CARDS_FILE = DATA_DIR / "cards.json"
+IMAGES_DIR = DATA_DIR / "cards_img"
+UNUSED_DIR = IMAGES_DIR / "unused"
 
-def change_animation():
-    with open(absolute+"cards.json", "r", encoding="utf-8") as f:
+# Animations supportées par le site
+# (voir src/core/contracts.ts -> KNOWN_CARD_ANIMATIONS).
+ANIMATIONS = [
+    "heart_burst",
+    "sparkles",
+    "petals",
+    "butterflies",
+    "fireflies",
+    "stars",
+    "glow",
+    "confetti",
+]
+
+# Valeurs considérées comme "vides" -> proposées à la complétion.
+EMPTY_VALUES = {"", " ", "none", "unknown"}
+QUIT_WORDS = {"quit", "exit", "-q"}
+
+CARD_ID_RE = re.compile(r"card-(\d+)")
+CARD_IMAGE_RE = re.compile(r"card(\d+)\.(?:webp|png|jpe?g)")
+
+
+def load_cards():
+    """Charge data/cards.json. Sort avec un message clair si le fichier est illisible."""
+    try:
+        with open(CARDS_FILE, "r", encoding="utf-8") as f:
             cards = json.load(f)
+    except FileNotFoundError:
+        sys.exit(f"ERREUR : {CARDS_FILE} n'existe pas.")
+    except json.JSONDecodeError as exc:
+        sys.exit(f"ERREUR : {CARDS_FILE} n'est pas un JSON valide ({exc}).\n"
+                 "Conflit Git non résolu (<<<<<<< / ======= / >>>>>>>) ? "
+                 "Résolvez d'abord le conflit dans cards.json.")
+    if not isinstance(cards, list):
+        sys.exit(f"ERREUR : {CARDS_FILE} doit contenir un tableau JSON.")
+    return cards
 
-    action = random.sample if len(animations)>=len(cards) else random.choics
-    anims = action(animations, len(cards))
 
-    for anim, card in zip(anims, cards):
-        card["animation"]=anim
-
-    with open(absolute+"cards.json", "w", encoding='utf-8') as f:
-            json.dump(cards, f, indent=4, ensure_ascii=False)
-
-def add(x):
-    l_img = list(images.iterdir())
-    x = min(x, len(l_img))
-
-    ids = ["card-"+str(n+i).rjust(3, "0") for i in range(1, x+1)]
-    imgs = random.sample(l_img, x)
-    imgs = [f.rename(f"{absolute}cards_img/card{str(n+i)}.webp") for f, i in zip(imgs, range(1, x+1))]
-    anims = random.choices(animations, k=x)
-    for id, img, anim in zip(ids, imgs, anims):
-        cards.append({"id": id, "image": absolute+str(img), "character": "unknown", "anime": "unknown", "quote": "unknown", "animation": anim, "author": "unknown"})
-    with open("cards.json", "w", encoding="utf-8") as f:
+def save_cards(cards):
+    with open(CARDS_FILE, "w", encoding="utf-8") as f:
         json.dump(cards, f, indent=4, ensure_ascii=False)
+        f.write("\n")
+
+
+def available_unused():
+    if not UNUSED_DIR.is_dir():
+        return []
+    return sorted(p for p in UNUSED_DIR.iterdir() if p.is_file())
+
+
+def next_numbers(cards):
+    """Prochains numéros d'id (card-XXX) et de fichier image (cardN.webp) sans collision."""
+    ids = [int(m.group(1)) for c in cards
+           for m in [CARD_ID_RE.fullmatch(str(c.get("id", "")))] if m]
+    imgs = {int(m.group(1)) for p in IMAGES_DIR.iterdir()
+            for m in [CARD_IMAGE_RE.fullmatch(p.name)] if m}
+    imgs |= {int(m.group(1)) for c in cards
+             for m in [CARD_IMAGE_RE.search(str(c.get("image", "")))] if m}
+    return (max(ids) + 1 if ids else 1), (max(imgs) + 1 if imgs else 1)
+
+
+def add(count):
+    """Ajoute `count` cartes en déplaçant des images depuis cards_img/unused."""
+    available = available_unused()
+    count = min(int(count), len(available))
+    if count <= 0:
+        print("Aucune image disponible dans cards_img/unused : rien à ajouter.")
+        return
+
+    cards = load_cards()
+    next_id, next_image = next_numbers(cards)
+    IMAGES_DIR.mkdir(parents=True, exist_ok=True)
+
+    for source in random.sample(available, count):
+        while (IMAGES_DIR / f"card{next_image}{source.suffix}").exists():
+            next_image += 1
+        destination = IMAGES_DIR / f"card{next_image}{source.suffix}"
+        source.rename(destination)
+        cards.append({
+            "id": f"card-{next_id:03d}",
+            "image": f"../../data/cards_img/{destination.name}",
+            "character": "unknown",
+            "anime": "unknown",
+            "quote": "unknown",
+            "animation": random.choice(ANIMATIONS),
+            "author": "unknown",
+        })
+        next_id += 1
+        next_image += 1
+
+    save_cards(cards)
+    print(f"{count} carte(s) ajoutée(s) et sauvegardée(s) dans {CARDS_FILE.name}.")
+
 
 def complete():
-    with open(absolute+"cards.json", "r", encoding="utf-8") as f:
-        cards = json.load(f)
-    
-    print("Instructions:\n - Veuillez completer les informations manquantes des cartes suivantes.\n - pour quittez dans n'importe quel champ de texte taper 'quit' ou 'exit' ou '-q'\n - pour vaider appuyer sur 'entrer'\n - pour laisser un champ incomplété appuyer sur 'entrer' sans rien mettre, un espace 'none' ou 'unknown'.\n")
-    quit, rien = ['quit', 'exit', '-q'], ['', 'none', 'unknown']
-    to_break = False
-    for card in cards:
-        if to_break: break
-        n=0
-        id = card["id"]
-        for e in card:
-            if card[e] in rien:
-                n+=1
-                if n==1:
-                    print(f"=================================card id: {id}=========================================\n")
-                value = input(f"    {e}: ")
-                if value.lower() in quit: 
-                    to_break = True
-                    break
-                elif value.strip().lower() in rien: card[e]="unknown"
-                card[e] = value
-        print("\n")
-    with open(absolute+"cards.json", "w", encoding='utf-8') as f:
-        json.dump(cards, f, indent=4, ensure_ascii=False)
+    """Complète interactivement les champs vides / 'unknown' de chaque carte."""
+    cards = load_cards()
+    print("Instructions :")
+    print(" - Complétez les champs vides ou 'unknown' des cartes ci-dessous.")
+    print(" - 'quit', 'exit' ou '-q' pour quitter (les saisies déjà faites sont gardées).")
+    print(" - Entrée vide, 'none' ou 'unknown' remet le champ à 'unknown'.\n")
 
-l = sys.argv
-t = len(l)
-if t>1:
-    e = sys.argv[1]
-    if e.isdigit():
-        add(int(e))
+    stop = False
+    for card in cards:
+        if stop:
+            break
+        empty_fields = [f for f in card if str(card[f]).strip().lower() in EMPTY_VALUES]
+        if not empty_fields:
+            continue
+        print(f"=================== carte id: {card.get('id')} ===================\n")
+        for field in empty_fields:
+            value = input(f"    {field}: ")
+            if value.strip().lower() in QUIT_WORDS:
+                stop = True
+                break
+            if value.strip().lower() in EMPTY_VALUES:
+                card[field] = "unknown"
+            else:
+                card[field] = value.strip()
+        print()
+
+    save_cards(cards)
+    print("Complétion interrompue — saisies déjà effectuées sauvegardées." if stop
+          else "Complétion terminée.")
+
+
+def animate():
+    """Réattribue aléatoirement une animation à chaque carte."""
+    cards = load_cards()
+    for card in cards:
+        card["animation"] = random.choice(ANIMATIONS)
+    save_cards(cards)
+    print(f"Animation réattribuée à {len(cards)} carte(s).")
+
+
+def show_menu():
+    print("Menu add_card.py :")
+    print("  1 · add N       ajouter N cartes")
+    print("  2 · complete    compléter les champs manquants")
+    print("  3 · animate     réattribuer les animations")
+    choice = input("\nChoix [défaut 2 · complete] : ").strip().lower()
+    if choice in {"add", "1"}:
+        value = input("Combien de cartes ajouter ? [défaut 1] : ").strip()
+        add(int(value) if value.isdigit() else 1)
+    elif choice in {"animate", "3"}:
+        animate()
     else:
         complete()
-else:
-    choix = input("Veuillez choisir une option à exécuter: \n 1- add \n 2- *complete\n\n choix[choisir le numero ou taper l'action correspondante. l'option 'complete' est choisie par défaut]: ")
-    a = ['add', '1']
-    if choix in a:
-        val = input("Veuillez entrer le nombre de cartes à ajouter[entrez un nombre entier '1' est choisi par defaut]: ")
-        val = int(val) if val.isdigit() else 1
-        add(val)
-    else: complete()
 
-change_animation()
+
+def main(args):
+    if not args:
+        show_menu()
+        return
+    first = args[0].strip().lower()
+    if first.isdigit():
+        add(int(first))
+    elif first == "add":
+        add(int(args[1]) if len(args) > 1 and args[1].isdigit() else 1)
+    elif first == "complete":
+        complete()
+    elif first == "animate":
+        animate()
+    else:
+        print(f"Commande inconnue : {first}\n")
+        show_menu()
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])

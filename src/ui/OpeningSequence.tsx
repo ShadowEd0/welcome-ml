@@ -66,7 +66,7 @@ export const OpeningSequence: React.FC<OpeningSequenceProps> = ({ onComplete }) 
             margin: 0,
             textTransform: 'UPPERCASE',
             opacity: phase === 'text' ? 0.9 : 1,
-            animation: 'fadeInText 2.5s ease-forward',
+            animation: 'fadeInText 2.5s ease-out',
           }}
         >
           WELCOME ML

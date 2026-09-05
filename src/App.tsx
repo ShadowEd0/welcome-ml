@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { OpeningSequence, MenuButton, NavigationMenu, UserPreferences } from './ui';
 import { VisualCanvas } from './visual-engine/VisualCanvas';
 import { UniverseRegistry } from './universes/UniverseRegistry';
@@ -70,15 +70,9 @@ export const App: React.FC = () => {
       const nextUni = randomizer.getRandomUniverse(currentUniverse.id);
       if (nextUni) {
         setCurrentUniverse(nextUni);
-        setPreferences((prev: UserPreferences) => {
-          const updated = { ...prev, universeId: nextUni.id };
-          try {
-            localStorage.setItem(PREFS_STORAGE_KEY, JSON.stringify(updated));
-          } catch (e) {
-            console.warn('localStorage inaccessible', e);
-          }
-          return updated;
-        });
+        // Updater pur : la persistance est centralisée dans le useEffect
+        // [preferences] (évite les écritures dupliquées sous StrictMode).
+        setPreferences((prev: UserPreferences) => ({ ...prev, universeId: nextUni.id }));
       }
     }, SEVEN_MINUTES_MS);
   }, [currentUniverse, randomizer]);
@@ -92,16 +86,19 @@ export const App: React.FC = () => {
     };
   }, [resetSevenMinuteTimer]);
 
+  // Persistance centralisée des préférences : une seule écriture, tolérante
+  // aux échecs (stockage désactivé/saturé), sans effet de bord dans les
+  // updaters d'état.
+  useEffect(() => {
+    try {
+      localStorage.setItem(PREFS_STORAGE_KEY, JSON.stringify(preferences));
+    } catch (e) {
+      console.warn('localStorage inaccessible', e);
+    }
+  }, [preferences]);
+
   const handleUpdatePreferences = useCallback((updated: Partial<UserPreferences>) => {
-    setPreferences((prev: UserPreferences) => {
-      const next = { ...prev, ...updated };
-      try {
-        localStorage.setItem(PREFS_STORAGE_KEY, JSON.stringify(next));
-      } catch (e) {
-        console.warn('localStorage inaccessible', e);
-      }
-      return next;
-    });
+    setPreferences((prev: UserPreferences) => ({ ...prev, ...updated }));
 
     if (updated.universeId) {
       const selected = registry.getUniverse(updated.universeId);
@@ -114,11 +111,6 @@ export const App: React.FC = () => {
 
   const handleResetPreferences = useCallback(() => {
     setPreferences(DEFAULT_PREFERENCES);
-    try {
-      localStorage.setItem(PREFS_STORAGE_KEY, JSON.stringify(DEFAULT_PREFERENCES));
-    } catch (e) {
-      console.warn('localStorage inaccessible', e);
-    }
 
     const defaultUni = registry.getUniverse(DEFAULT_PREFERENCES.universeId);
     if (defaultUni) {
@@ -135,21 +127,29 @@ export const App: React.FC = () => {
     }
   }, [currentUniverse, randomizer, handleUpdatePreferences]);
 
-  // Conversion explicite vers VisualEffectConfig[] (type réel de core/contracts)
-  const activeEffects: EffectConfig[] = (currentUniverse?.effects || []).map((eff) => {
-    const extraParams = typeof eff.params === 'object' && eff.params !== null
-      ? eff.params as Record<string, unknown>
-      : {};
-    return {
-      ...extraParams,
-      id: String(eff.id || eff.type),
-      type: String(eff.type),
-      enabled: eff.enabled ?? true,
-      color: eff.color ?? [currentUniverse?.palette.primary ?? '#ffffff', currentUniverse?.palette.accent ?? '#ffffff'],
-      speed: (typeof eff.speed === 'number' ? eff.speed : 1) * (currentUniverse?.speed ?? 1) * preferences.speed,
-      count: Math.max(1, Math.round((typeof eff.count === 'number' ? eff.count : 50) * (currentUniverse?.density ?? 1) * preferences.intensity)),
-    };
-  });
+  // Mémoïsé : évite de recréer le tableau (et donc de recharger tous les
+  // effets du moteur via VisualCanvas) à chaque render sans rapport
+  // (ouverture du menu, viewer de cartes…). Recréé uniquement quand
+  // l'univers ou les multiplicateurs utilisateur changent réellement.
+  const activeEffects = useMemo<EffectConfig[]>(() => {
+    // Conversion vers EffectConfig[] (type du moteur visual-engine) :
+    // applique les multiplicateurs d'intensité/vitesse/densité de l'univers
+    // courant et des préférences utilisateur.
+    return (currentUniverse?.effects || []).map((eff) => {
+      const extraParams = typeof eff.params === 'object' && eff.params !== null
+        ? eff.params as Record<string, unknown>
+        : {};
+      return {
+        ...extraParams,
+        id: String(eff.id || eff.type),
+        type: String(eff.type),
+        enabled: eff.enabled ?? true,
+        color: eff.color ?? [currentUniverse?.palette.primary ?? '#ffffff', currentUniverse?.palette.accent ?? '#ffffff'],
+        speed: (typeof eff.speed === 'number' ? eff.speed : 1) * (currentUniverse?.speed ?? 1) * preferences.speed,
+        count: Math.max(1, Math.round((typeof eff.count === 'number' ? eff.count : 50) * (currentUniverse?.density ?? 1) * preferences.intensity)),
+      };
+    });
+  }, [currentUniverse, preferences.speed, preferences.intensity]);
 
   const background = currentUniverse?.background;
   const backgroundStyle = background

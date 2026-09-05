@@ -1,3 +1,10 @@
-e/data/cards_img/unused/
+# Dépendances
 node_modules/
-e/data/add_card.py
+
+# Résultat de build (régénérable via npm run build)
+dist/
+
+# Fichiers temporaires / système
+*.log
+.DS_Store
+Thumbs.db

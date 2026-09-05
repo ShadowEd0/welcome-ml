@@ -1,4 +1,7 @@
-export type QualityLevel = 'AUTO' | 'LOW' | 'MEDIUM' | 'HIGH' | 'ULTRA';
+import type { QualityLevel } from '../core/contracts';
+
+/** Canonical quality level — defined once in core/contracts. */
+export type { QualityLevel };
 
 export interface ViewportSize {
   width: number;
