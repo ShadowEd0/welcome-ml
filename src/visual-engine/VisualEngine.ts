@@ -15,6 +15,12 @@ export class VisualEngine {
   private elapsedTime = 0;
   private isPaused = false;
 
+  // Crossfade state
+  private transitionActive = false;
+  private transitionProgress = 0;
+  private transitionDuration = 0;
+  private transitionStartTime = 0;
+
   private viewport: ViewportSize = { width: 0, height: 0, dpr: 1 };
   private pointer: PointerState = { x: 0, y: 0, isHovered: false };
 
@@ -90,6 +96,62 @@ export class VisualEngine {
     return targets;
   }
 
+  public startCrossfade(duration: number): void {
+    if (!this.targetEffects || this.targetEffects.length === 0) return;
+
+    // If a transition is already active, clean up the old target
+    // The current `effects` remains as the source
+    if (this.transitionActive) {
+      // Current effects stay as source, just replace target
+    }
+
+    this.transitionDuration = duration;
+    this.transitionStartTime = performance.now();
+    this.transitionProgress = 0;
+    this.transitionActive = true;
+
+    // Set initial opacities
+    for (const effect of this.effects) {
+      (effect as BaseEffect<unknown>).setTransitionOpacity(1);
+    }
+    for (const effect of this.targetEffects) {
+      (effect as BaseEffect<unknown>).setTransitionOpacity(0);
+    }
+  }
+
+  private finishCrossfade(): void {
+    // Target becomes the new active effects
+    this.destroyEffectList(this.effects);
+    this.effects = this.targetEffects!;
+    this.targetEffects = null;
+    this.transitionActive = false;
+    this.transitionProgress = 0;
+    this.transitionDuration = 0;
+  }
+
+  private updateTransition(now: number): void {
+    if (!this.transitionActive) return;
+
+    const elapsed = now - this.transitionStartTime;
+    this.transitionProgress = Math.min(elapsed / this.transitionDuration, 1);
+
+    const sourceOpacity = 1 - this.transitionProgress;
+    const targetOpacity = this.transitionProgress;
+
+    for (const effect of this.effects) {
+      (effect as BaseEffect<unknown>).setTransitionOpacity(sourceOpacity);
+    }
+    if (this.targetEffects) {
+      for (const effect of this.targetEffects) {
+        (effect as BaseEffect<unknown>).setTransitionOpacity(targetOpacity);
+      }
+    }
+
+    if (this.transitionProgress >= 1) {
+      this.finishCrossfade();
+    }
+  }
+
   private reinitializeEffects(): void {
     const renderCtx = this.getRenderContext(0);
     for (const effect of this.effects) {
@@ -110,6 +172,9 @@ export class VisualEngine {
         this.lastTime = now;
         this.elapsedTime += deltaTime;
 
+        if (this.transitionActive) {
+          this.updateTransition(now);
+        }
         this.update(deltaTime);
         this.render();
       }
@@ -122,6 +187,11 @@ export class VisualEngine {
     const renderCtx = this.getRenderContext(deltaTime);
     for (let i = 0; i < this.effects.length; i++) {
       this.effects[i].update(renderCtx);
+    }
+    if (this.transitionActive && this.targetEffects) {
+      for (let i = 0; i < this.targetEffects.length; i++) {
+        this.targetEffects[i].update(renderCtx);
+      }
     }
   }
 
