@@ -1,7 +1,7 @@
 [
   {
     "id": "card-001",
-    "image": "cards_img/card1.jpg",
+    "image": "../../data/cards_img/card1.jpg",
     "character": "Je ne sais pas",
     "anime": "Teen Titan",
     "quote": "A short, memorable line that captures the character.",
@@ -10,7 +10,7 @@
   },
   {
     "id": "card-002",
-    "image": "cards_img/card2.jpg",
+    "image": "../../data/cards_img/card2.jpg",
     "character": "Test",
     "anime": "Sword Art Online",
     "quote": "Author is optional — this card omits it and the UI hides that field automatically.",
@@ -18,7 +18,7 @@
   },
   {
     "id": "card-003",
-    "image": "cards_img/card3.jpg",
+    "image": "../../data/cards_img/card3.jpg",
     "character": "Third Character",
     "anime": "Hotel Transylvanie",
     "quote": "An unrecognized animation name safely falls back to \"none\" instead of breaking the card.",
