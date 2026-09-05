@@ -6,6 +6,7 @@ export abstract class BaseEffect<TParticle> implements IEffect {
   protected particles: TParticle[] = [];
   protected config: EffectConfig = { type: 'base' };
   protected viewport: ViewportSize = { width: 0, height: 0, dpr: 1 };
+  protected transitionOpacity = 1;
 
   constructor(type: string, id?: string) {
     this.type = type;
@@ -24,6 +25,14 @@ export abstract class BaseEffect<TParticle> implements IEffect {
 
   public getConfig(): EffectConfig {
     return this.config;
+  }
+
+  public getTransitionOpacity(): number {
+    return this.transitionOpacity;
+  }
+
+  public setTransitionOpacity(value: number): void {
+    this.transitionOpacity = Math.max(0, Math.min(1, value));
   }
 
   public resize(viewport: ViewportSize): void {
