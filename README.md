@@ -113,7 +113,7 @@ Exemple :
 ```json
 {
   "id": "card-01",
-  "image": "./cards_img/manuella-01.webp",
+  "image": "./cards_img/image-01.webp",
   "character": "Personnage",
   "anime": "Anime",
   "quote": "Une phrase qui apparaît au dos de la carte.",
