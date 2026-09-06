@@ -39,6 +39,27 @@ function loadPreferences(): UserPreferences {
   }
 }
 
+// Conversion unique « univers + préférences -> EffectConfig[] ». Pure,
+// déterministe, sans état global. Remplaçait une logique dupliquée entre
+// `activeEffects` et le callback de transition (cause du stale closure :
+// le callback capturait d'anciennes speed/intensity).
+function buildEffectConfigs(universe: UniverseConfig | null, prefs: UserPreferences): EffectConfig[] {
+  return (universe?.effects || []).map((eff) => {
+    const extraParams = typeof eff.params === 'object' && eff.params !== null
+      ? eff.params as Record<string, unknown>
+      : {};
+    return {
+      ...extraParams,
+      id: String(eff.id || eff.type),
+      type: String(eff.type),
+      enabled: eff.enabled ?? true,
+      color: eff.color ?? [universe?.palette.primary ?? '#ffffff', universe?.palette.accent ?? '#ffffff'],
+      speed: (typeof eff.speed === 'number' ? eff.speed : 1) * (universe?.speed ?? 1) * prefs.speed,
+      count: Math.max(1, Math.round((typeof eff.count === 'number' ? eff.count : 50) * (universe?.density ?? 1) * prefs.intensity)),
+    };
+  });
+}
+
 export const App: React.FC = () => {
   const [showOpening, setShowOpening] = useState<boolean>(true);
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
@@ -98,20 +119,7 @@ export const App: React.FC = () => {
         root.style.setProperty('--u-glow', config.palette.glowColor);
       },
       () => {
-        const targetEffects = (to.effects || []).map((eff) => {
-          const extraParams = typeof eff.params === 'object' && eff.params !== null
-            ? eff.params as Record<string, unknown>
-            : {};
-          return {
-            ...extraParams,
-            id: String(eff.id || eff.type),
-            type: String(eff.type),
-            enabled: eff.enabled ?? true,
-            color: eff.color ?? [to.palette.primary ?? '#ffffff', to.palette.accent ?? '#ffffff'],
-            speed: (typeof eff.speed === 'number' ? eff.speed : 1) * (to.speed ?? 1) * preferences.speed,
-            count: Math.max(1, Math.round((typeof eff.count === 'number' ? eff.count : 50) * (to.density ?? 1) * preferences.intensity)),
-          };
-        });
+        const targetEffects = buildEffectConfigs(to, preferences);
 
         const engine = visualCanvasRef.current?.getEngine();
         if (engine) {
@@ -124,7 +132,7 @@ export const App: React.FC = () => {
         transitionManagerRef.current = null;
       }
     );
-  }, [currentUniverse, registry]);
+  }, [currentUniverse, registry, preferences]);
 
   const resetSevenMinuteTimer = useCallback(() => {
     if (timerRef.current !== null) {
@@ -205,20 +213,7 @@ export const App: React.FC = () => {
     // Conversion vers EffectConfig[] (type du moteur visual-engine) :
     // applique les multiplicateurs d'intensité/vitesse/densité de l'univers
     // courant et des préférences utilisateur.
-    return (currentUniverse?.effects || []).map((eff) => {
-      const extraParams = typeof eff.params === 'object' && eff.params !== null
-        ? eff.params as Record<string, unknown>
-        : {};
-      return {
-        ...extraParams,
-        id: String(eff.id || eff.type),
-        type: String(eff.type),
-        enabled: eff.enabled ?? true,
-        color: eff.color ?? [currentUniverse?.palette.primary ?? '#ffffff', currentUniverse?.palette.accent ?? '#ffffff'],
-        speed: (typeof eff.speed === 'number' ? eff.speed : 1) * (currentUniverse?.speed ?? 1) * preferences.speed,
-        count: Math.max(1, Math.round((typeof eff.count === 'number' ? eff.count : 50) * (currentUniverse?.density ?? 1) * preferences.intensity)),
-      };
-    });
+    return buildEffectConfigs(currentUniverse, preferences);
   }, [currentUniverse, preferences.speed, preferences.intensity]);
 
   const background = currentUniverse?.background;
