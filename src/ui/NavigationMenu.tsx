@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { SettingsPanel, UserPreferences } from '../settings/SettingsPanel';
 import { CardGallery } from '../cards';
 
-type Tab = 'Experience' | 'Visuals' | 'Cards' | 'Customize';
+type Tab = 'Experience' | 'Cards' | 'Customize';
 
 interface NavigationMenuProps {
   isOpen: boolean;
@@ -14,6 +14,8 @@ interface NavigationMenuProps {
   onResetPreferences: () => void;
 }
 
+const CLOSE_ANIM_MS = 160;
+
 export const NavigationMenu: React.FC<NavigationMenuProps> = ({
   isOpen,
   onClose,
@@ -24,11 +26,81 @@ export const NavigationMenu: React.FC<NavigationMenuProps> = ({
   onResetPreferences,
 }) => {
   const [activeTab, setActiveTab] = useState<Tab>('Customize');
+  const [mounted, setMounted] = useState(isOpen);
+  const [closing, setClosing] = useState(false);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
 
-  if (!isOpen) return null;
+  // Maintient le menu monté pendant la petite animation de fermeture.
+  useEffect(() => {
+    if (isOpen) {
+      setMounted(true);
+      setClosing(false);
+      return;
+    }
+    setClosing(true);
+    const timer = window.setTimeout(() => {
+      setMounted(false);
+      setClosing(false);
+    }, CLOSE_ANIM_MS);
+    return () => window.clearTimeout(timer);
+  }, [isOpen]);
+
+  // Gestion du focus + Escape + piège de focus une fois le panneau rendu.
+  useEffect(() => {
+    if (!mounted || closing) return;
+
+    previousFocusRef.current = document.activeElement as HTMLElement | null;
+
+    const focusables = () => {
+      if (!panelRef.current) return [];
+      return Array.from(
+        panelRef.current.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        )
+      ).filter((el) => el.offsetParent !== null);
+    };
+
+    const first = focusables()[0];
+    first?.focus();
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        onClose();
+        return;
+      }
+      if (event.key !== 'Tab') return;
+
+      const items = focusables();
+      if (items.length === 0) return;
+
+      const firstEl = items[0];
+      const lastEl = items[items.length - 1];
+      const active = document.activeElement as HTMLElement | null;
+
+      if (event.shiftKey && (active === firstEl || !panelRef.current?.contains(active))) {
+        event.preventDefault();
+        lastEl.focus();
+      } else if (!event.shiftKey && (active === lastEl || !panelRef.current?.contains(active))) {
+        event.preventDefault();
+        firstEl.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      previousFocusRef.current?.focus();
+      previousFocusRef.current = null;
+    };
+  }, [mounted, closing, onClose]);
+
+  if (!mounted) return null;
 
   return (
     <div
+      className={`menu-overlay ${closing ? 'menu-overlay--closing' : ''}`}
       onClick={onClose}
       style={{
         position: 'fixed',
@@ -44,8 +116,14 @@ export const NavigationMenu: React.FC<NavigationMenuProps> = ({
       }}
     >
       <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Navigation menu"
         onClick={(e) => e.stopPropagation()}
+        className={`menu-panel ${closing ? 'menu-panel--closing' : ''}`}
         style={{
+          position: 'relative',
           width: '100%',
           maxWidth: '420px',
           maxHeight: '85vh',
@@ -59,6 +137,29 @@ export const NavigationMenu: React.FC<NavigationMenuProps> = ({
           overflow: 'hidden',
         }}
       >
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close menu"
+          style={{
+            position: 'absolute',
+            top: '0.75rem',
+            right: '0.75rem',
+            width: '32px',
+            height: '32px',
+            borderRadius: '50%',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            background: 'rgba(255, 255, 255, 0.06)',
+            color: 'rgba(255, 255, 255, 0.75)',
+            fontSize: '1.1rem',
+            lineHeight: 1,
+            cursor: 'pointer',
+            zIndex: 1,
+          }}
+        >
+          ×
+        </button>
+
         {/* Navigation Tabs */}
         <div
           style={{
@@ -70,9 +171,10 @@ export const NavigationMenu: React.FC<NavigationMenuProps> = ({
             overflowX: 'auto',
           }}
         >
-          {(['Experience', 'Visuals', 'Cards', 'Customize'] as Tab[]).map((tab) => (
+          {(['Experience', 'Cards', 'Customize'] as Tab[]).map((tab) => (
             <button
               key={tab}
+              type="button"
               onClick={() => setActiveTab(tab)}
               style={{
                 background: activeTab === tab ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
@@ -107,11 +209,6 @@ export const NavigationMenu: React.FC<NavigationMenuProps> = ({
               <p>Let the scenes automatically evolve or manually steer your journey.</p>
             </div>
           )}
-          {activeTab === 'Visuals' && (
-            <div style={{ color: '#DDD', fontSize: '0.9rem' }}>
-              <p>Configure procedural atmospheric lighting, halos, and particle layers in real-time.</p>
-            </div>
-          )}
           {activeTab === 'Cards' && (
             <CardGallery />
           )}
@@ -119,6 +216,7 @@ export const NavigationMenu: React.FC<NavigationMenuProps> = ({
 
         {/* Randomize Action Button */}
         <button
+          type="button"
           onClick={() => {
             onRandomize();
             onClose();
