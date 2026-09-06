@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { OpeningSequence, MenuButton, NavigationMenu, UserPreferences } from './ui';
-import { VisualCanvas } from './visual-engine/VisualCanvas';
+import { VisualCanvas, VisualCanvasHandle } from './visual-engine/VisualCanvas';
 import { UniverseRegistry } from './universes/UniverseRegistry';
 import { Randomizer } from './universes/Randomizer';
 import { SceneTransitionManager } from './universes/SceneTransitionManager';
@@ -53,7 +53,8 @@ export const App: React.FC = () => {
 
   const timerRef = useRef<number | null>(null);
   const transitionManagerRef = useRef<SceneTransitionManager | null>(null);
-  const isTransitioningRef = useRef(false);
+      const isTransitioningRef = useRef(false);
+  const visualCanvasRef = useRef<VisualCanvasHandle>(null);
 
   useEffect(() => {
     const allUniverses: UniverseConfig[] = registry.getAllUniverses();

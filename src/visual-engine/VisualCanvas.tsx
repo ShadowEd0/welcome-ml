@@ -1,6 +1,10 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
 import { VisualEngine } from './VisualEngine';
 import { EffectConfig, QualityLevel } from './types';
+
+export interface VisualCanvasHandle {
+  getEngine(): VisualEngine | null;
+}
 
 interface VisualCanvasProps {
   effects: EffectConfig[];
@@ -8,40 +12,46 @@ interface VisualCanvasProps {
   className?: string;
 }
 
-export const VisualCanvas: React.FC<VisualCanvasProps> = ({ effects, quality = 'AUTO', className = '' }) => {
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const engineRef = useRef<VisualEngine | null>(null);
+export const VisualCanvas = forwardRef<VisualCanvasHandle, VisualCanvasProps>(
+  ({ effects, quality = 'AUTO', className = '' }, ref) => {
+    const canvasRef = useRef<HTMLCanvasElement | null>(null);
+    const engineRef = useRef<VisualEngine | null>(null);
 
-  useEffect(() => {
-    if (!canvasRef.current) return;
+    useImperativeHandle(ref, () => ({
+      getEngine: () => engineRef.current,
+    }), []);
 
-    const engine = new VisualEngine();
-    engine.initialize(canvasRef.current, quality);
-    engineRef.current = engine;
+    useEffect(() => {
+      if (!canvasRef.current) return;
 
-    return () => {
-      engine.destroy();
-      engineRef.current = null;
-    };
-  }, []);
+      const engine = new VisualEngine();
+      engine.initialize(canvasRef.current, quality);
+      engineRef.current = engine;
 
-  useEffect(() => {
-    if (engineRef.current) {
-      engineRef.current.setQuality(quality);
-    }
-  }, [quality]);
+      return () => {
+        engine.destroy();
+        engineRef.current = null;
+      };
+    }, []);
 
-  useEffect(() => {
-    if (engineRef.current) {
-      engineRef.current.loadUniverseConfig(effects);
-    }
-  }, [effects]);
+    useEffect(() => {
+      if (engineRef.current) {
+        engineRef.current.setQuality(quality);
+      }
+    }, [quality]);
 
-  return (
-    <canvas
-      ref={canvasRef}
-      className={className}
-      style={{ position: 'fixed', inset: 0, zIndex: 0, touchAction: 'none' }}
-    />
-  );
-};
+    useEffect(() => {
+      if (engineRef.current) {
+        engineRef.current.loadUniverseConfig(effects);
+      }
+    }, [effects]);
+
+    return (
+      <canvas
+        ref={canvasRef}
+        className={className}
+        style={{ position: 'fixed', inset: 0, zIndex: 0, touchAction: 'none' }}
+      />
+    );
+  }
+);
