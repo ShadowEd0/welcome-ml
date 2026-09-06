@@ -53,7 +53,7 @@ export const App: React.FC = () => {
 
   const timerRef = useRef<number | null>(null);
   const transitionManagerRef = useRef<SceneTransitionManager | null>(null);
-      const isTransitioningRef = useRef(false);
+  const isTransitioningRef = useRef(false);
   const visualCanvasRef = useRef<VisualCanvasHandle>(null);
 
   useEffect(() => {
@@ -98,7 +98,27 @@ export const App: React.FC = () => {
         root.style.setProperty('--u-glow', config.palette.glowColor);
       },
       () => {
-        // Fin de transition : charger le nouvel univers dans le VisualEngine
+        const targetEffects = (to.effects || []).map((eff) => {
+          const extraParams = typeof eff.params === 'object' && eff.params !== null
+            ? eff.params as Record<string, unknown>
+            : {};
+          return {
+            ...extraParams,
+            id: String(eff.id || eff.type),
+            type: String(eff.type),
+            enabled: eff.enabled ?? true,
+            color: eff.color ?? [to.palette.primary ?? '#ffffff', to.palette.accent ?? '#ffffff'],
+            speed: (typeof eff.speed === 'number' ? eff.speed : 1) * (to.speed ?? 1) * preferences.speed,
+            count: Math.max(1, Math.round((typeof eff.count === 'number' ? eff.count : 50) * (to.density ?? 1) * preferences.intensity)),
+          };
+        });
+
+        const engine = visualCanvasRef.current?.getEngine();
+        if (engine) {
+          engine.prepareTransition(targetEffects);
+          engine.startCrossfade(1500);
+        }
+
         setCurrentUniverse(to);
         isTransitioningRef.current = false;
         transitionManagerRef.current = null;
@@ -224,6 +244,7 @@ export const App: React.FC = () => {
         )}
 
         <VisualCanvas
+          ref={visualCanvasRef}
           effects={activeEffects}
           quality={preferences.quality}
         />

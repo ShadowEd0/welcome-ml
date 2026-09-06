@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
+import { useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
 import { VisualEngine } from './VisualEngine';
 import { EffectConfig, QualityLevel } from './types';
 
@@ -41,7 +41,7 @@ export const VisualCanvas = forwardRef<VisualCanvasHandle, VisualCanvasProps>(
     }, [quality]);
 
     useEffect(() => {
-      if (engineRef.current) {
+      if (engineRef.current && !engineRef.current.isTransitioning()) {
         engineRef.current.loadUniverseConfig(effects);
       }
     }, [effects]);

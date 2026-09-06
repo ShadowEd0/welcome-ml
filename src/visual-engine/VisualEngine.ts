@@ -42,6 +42,10 @@ export class VisualEngine {
     this.reinitializeEffects();
   }
 
+  public isTransitioning(): boolean {
+    return this.transitionActive;
+  }
+
   private updateQualityMultiplier(): void {
     switch (this.quality) {
       case 'LOW':
@@ -64,6 +68,12 @@ export class VisualEngine {
   }
 
   public loadUniverseConfig(effectConfigs: EffectConfig[]): void {
+    if (this.transitionActive) {
+      this.clearTargetEffects();
+      this.transitionActive = false;
+      this.transitionProgress = 0;
+      this.transitionDuration = 0;
+    }
     this.clearEffects();
 
     const renderCtx = this.getRenderContext(0);
