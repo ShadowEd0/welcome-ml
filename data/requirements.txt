@@ -1,0 +1,3 @@
+# Dépendance Python du pipeline d'images (data/add_card.py)
+# `Image.Resampling.LANCZOS` (add_card.py) nécessite Pillow >= 9.1.
+Pillow>=9.1

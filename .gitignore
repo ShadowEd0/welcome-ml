@@ -8,3 +8,7 @@ dist/
 *.log
 .DS_Store
 Thumbs.db
+
+# Artefacts Python (générés par data/add_card.py)
+__pycache__/
+*.pyc

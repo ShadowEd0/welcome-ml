@@ -21,6 +21,9 @@ Pipeline d'import des images :
 
 Outil requis : Pillow (Python). Aucune autre dépendance.
 
+Installation de la dépendance :
+    python -m pip install -r data/requirements.txt
+
 Aucun chemin absolu n'est requis : tous les chemins sont déduits de
 l'emplacement de ce script, qui doit rester dans le dossier data/.
 """
