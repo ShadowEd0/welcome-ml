@@ -210,7 +210,7 @@ export const NavigationMenu: React.FC<NavigationMenuProps> = ({
             </div>
           )}
           {activeTab === 'Cards' && (
-            <CardGallery />
+            <CardGallery onOpenCard={() => onClose()} />
           )}
         </div>
 
