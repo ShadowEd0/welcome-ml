@@ -34,6 +34,21 @@ import { dampedMemory } from "./scenes/catalog/dampedMemory";
 import { celestialButterfly } from "./scenes/catalog/celestialButterfly";
 import { roseGalaxy } from "./scenes/catalog/roseGalaxy";
 import { orbitalSymphony } from "./scenes/catalog/orbitalSymphony";
+import { quantumLace } from "./scenes/catalog/quantumLace";
+import { crystalMaurer } from "./scenes/catalog/crystalMaurer";
+import { attractorSilk } from "./scenes/catalog/attractorSilk";
+import { cymaticResonance } from "./scenes/catalog/cymaticResonance";
+import { pulsarWaves } from "./scenes/catalog/pulsarWaves";
+import { fermatVortex } from "./scenes/catalog/fermatVortex";
+import { logPulsing } from "./scenes/catalog/logPulsing";
+import { gielisShield } from "./scenes/catalog/gielisShield";
+import { thomasKnot } from "./scenes/catalog/thomasKnot";
+import { gaborRipple } from "./scenes/catalog/gaborRipple";
+import { torusRibbon } from "./scenes/catalog/torusRibbon";
+import { cornuNebula } from "./scenes/catalog/cornuNebula";
+import { aizawaVortex } from "./scenes/catalog/aizawaVortex";
+import { rationalLens } from "./scenes/catalog/rationalLens";
+import { shockwaveCrystal } from "./scenes/catalog/shockwaveCrystal";
 
 export type MathVersoFamily =
   | "floral"
@@ -85,6 +100,21 @@ export const MATH_VERSO_CATALOGUE: readonly MathVersoEntry[] = [
   celestialButterfly,
   roseGalaxy,
   orbitalSymphony,
+  quantumLace,
+  crystalMaurer,
+  attractorSilk,
+  cymaticResonance,
+  pulsarWaves,
+  fermatVortex,
+  logPulsing,
+  gielisShield,
+  thomasKnot,
+  gaborRipple,
+  torusRibbon,
+  cornuNebula,
+  aizawaVortex,
+  rationalLens,
+  shockwaveCrystal,
 ];
 
 /** All catalogue ids, in catalogue order. */

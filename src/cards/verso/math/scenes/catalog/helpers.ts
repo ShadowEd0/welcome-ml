@@ -5,7 +5,7 @@
  * readable instead of repeating sampling/import boilerplate.
  */
 
-import type { CurveLayer, MathComposition, Tracer, Trail, Transform2D } from "../../types";
+import type { CurveLayer, MathComposition, RevealLayerSpec, Tracer, Trail, Transform2D } from "../../types";
 import type { CurveSpec } from "../../types";
 import { sampleCurve } from "../../sampling";
 
@@ -24,6 +24,7 @@ export function makeLayer(
     tracer?: Tracer;
     trail?: Trail;
     count?: number;
+    reveal?: RevealLayerSpec;
   } = {}
 ): CurveLayer {
   const curve = sampleCurve(
@@ -40,6 +41,7 @@ export function makeLayer(
     transform: opts.transform,
     tracer: opts.tracer,
     trail: opts.trail,
+    reveal: opts.reveal,
   };
 }
 

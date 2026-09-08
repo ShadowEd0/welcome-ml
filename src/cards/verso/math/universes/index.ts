@@ -16,6 +16,10 @@ import { GoldenHourUniverse } from "./goldenHour";
 import { ArcticSilenceUniverse } from "./arcticSilence";
 import { RoseCosmosUniverse } from "./roseCosmos";
 import { BlackMirrorUniverse } from "./blackMirror";
+import { EmberVoidUniverse } from "./emberVoid";
+import { SilkSmokeUniverse } from "./silkSmoke";
+import { VoidIceUniverse } from "./voidIce";
+import { CalmAquaUniverse } from "./calmAqua";
 
 export type UniverseId =
   | "midnight_observatory"
@@ -27,7 +31,11 @@ export type UniverseId =
   | "golden_hour"
   | "arctic_silence"
   | "rose_cosmos"
-  | "black_mirror";
+  | "black_mirror"
+  | "ember_void"
+  | "silk_smoke"
+  | "void_ice"
+  | "calm_aqua";
 
 const factories: Record<UniverseId, () => Universe> = {
   midnight_observatory: () => new MidnightObservatoryUniverse(),
@@ -40,6 +48,10 @@ const factories: Record<UniverseId, () => Universe> = {
   arctic_silence: () => new ArcticSilenceUniverse(),
   rose_cosmos: () => new RoseCosmosUniverse(),
   black_mirror: () => new BlackMirrorUniverse(),
+  ember_void: () => new EmberVoidUniverse(),
+  silk_smoke: () => new SilkSmokeUniverse(),
+  void_ice: () => new VoidIceUniverse(),
+  calm_aqua: () => new CalmAquaUniverse(),
 };
 
 /** All available universe ids. */
@@ -63,6 +75,10 @@ export { GoldenHourUniverse } from "./goldenHour";
 export { ArcticSilenceUniverse } from "./arcticSilence";
 export { RoseCosmosUniverse } from "./roseCosmos";
 export { BlackMirrorUniverse } from "./blackMirror";
+export { EmberVoidUniverse } from "./emberVoid";
+export { SilkSmokeUniverse } from "./silkSmoke";
+export { VoidIceUniverse } from "./voidIce";
+export { CalmAquaUniverse } from "./calmAqua";
 
 // Factory functions — convenient shorthand for `new XxxUniverse()`.
 export const createMidnightObservatory = () => new MidnightObservatoryUniverse();
@@ -75,3 +91,7 @@ export const createGoldenHour = () => new GoldenHourUniverse();
 export const createArcticSilence = () => new ArcticSilenceUniverse();
 export const createRoseCosmos = () => new RoseCosmosUniverse();
 export const createBlackMirror = () => new BlackMirrorUniverse();
+export const createEmberVoid = () => new EmberVoidUniverse();
+export const createSilkSmoke = () => new SilkSmokeUniverse();
+export const createVoidIce = () => new VoidIceUniverse();
+export const createCalmAqua = () => new CalmAquaUniverse();
