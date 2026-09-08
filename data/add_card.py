@@ -26,6 +26,20 @@ Installation de la dépendance :
 
 Aucun chemin absolu n'est requis : tous les chemins sont déduits de
 l'emplacement de ce script, qui doit rester dans le dossier data/.
+
+Modes de verso (Mission #25) :
+    Le dos de chaque nouvelle carte propose 3 modes, au choix de l'utilisateur
+    (saisi au moment de la création de la carte) :
+      1. random      -> verso mathématique tiré AU HASARD, de façon ÉQUILIBRÉE ;
+      2. manuel      -> choix MANUEL d'un verso mathématique (PAS bloqué par
+                        l'équilibrage : l'utilisateur peut répéter un verso) ;
+      3. message     -> carte-message : un texte avec son animation textuelle
+                        (tirée de façon équilibrée parmi les 7 scènes texte).
+    L'équilibrage stricte exige qu'un verso ne soit PAS réutilisé tant que les
+    autres éligibles n'ont pas atteint le même nombre d'utilisations. La liste
+    des versos mathématiques (MATH_VERSOS) est le MIROIR du catalogue TypeScript
+    src/cards/verso/math/catalog.ts -> MATH_VERSO_CATALOGUE. Les deux listes
+    doivent rester synchronisées (voir la notice en tête de MATH_VERSOS).
 """
 
 import json
@@ -94,33 +108,56 @@ ANIMATIONS = [
     "confetti",
 ]
 
-# Vraies animations GRAPHIQUES de verso (17) : scènes enregistrées dans
-# src/cards/verso/scenes/index.ts, hors animations texte. Utilisables par
-# une carte via CardConfig.verso / versoPool, rendues par le système verso
-# (FlipCard.resolveVerso -> VersoAnimationRenderer -> registry).
-VERSO_ANIMATIONS = [
-    "breathing_rings",
-    "ink_tide",
-    "light_tailor",
-    "sketchbook_living",
-    "porcelain_memory",
-    "floating_watercolor",
-    "retable_miniature",
-    "prism_obsidian",
-    "celestial_constellation",
-    "paper_origami",
-    "liquid_gold",
-    "vaporwave_sun",
-    "starfield_heart",
-    "origami_heart",
-    "trigonometric_heart",
-    "geometric_morphing",
-    "floral_bloom",
+# ---------------------------------------------------------------------------
+# Versos MATHÉMATIQUES du catalogue (Mission #25).
+#
+# MIROIR EXACT de src/cards/verso/math/catalog.ts -> MATH_VERSO_CATALOGUE.
+# Chaque id correspond à une scène finie enregistrée dans le registre verso
+# (Scenes/index.ts -> MATH_VERSO_CATALOGUE -> toDefinition -> registry).
+#
+# POUR AJOUTER UN VERSO AU CATALOGUE :
+#   1. créer la scène dans src/cards/verso/math/scenes/catalog/<id>.ts ;
+#   2. l'ajouter à MATH_VERSO_CATALOGUE (catalog.ts) ;
+#   3. l'ajouter ICI, à la même position idéalement.
+# Le moteur mathématique n'exige AUCUN changement pour un nouveau verso.
+#
+# Les scènes graphiques "non-math" de la Mission #18 ont été ARCHIVÉES
+# (Mission #25) dans src/cards/verso/scenes/unused/ ; elles ne sont plus
+# distribuées — aucune carte ne doit plus les référencer.
+MATH_VERSOS = [
+    "rose_garden",
+    "petal_mandala",
+    "clover_meadow",
+    "celestial_orbits",
+    "golden_spiral",
+    "cardioid_echo",
+    "lemniscate_infinity",
+    "lissajous_weave",
+    "spirokinetic",
+    "damped_memory",
+    "celestial_butterfly",
+    "rose_galaxy",
+    "orbital_symphony",
 ]
+MATH_VERSO_NAMES = {
+    "rose_garden": "Jardin de roses",
+    "petal_mandala": "Pétale mandala",
+    "clover_meadow": "Pré de trèfles",
+    "celestial_orbits": "Orbites célestes",
+    "golden_spiral": "Spirale dorée",
+    "cardioid_echo": "Écho de cardioïde",
+    "lemniscate_infinity": "Infini croisé",
+    "lissajous_weave": "Tissage de Lissajous",
+    "spirokinetic": "Spirokinétic",
+    "damped_memory": "Mémoire amortie",
+    "celestial_butterfly": "Papillon céleste",
+    "rose_galaxy": "Galaxie de roses",
+    "orbital_symphony": "Symphonie orbitale",
+}
 
 # Animations TEXTUELLES de verso (7) — famille indépendante.
 # IDs exacts du registre (voir src/cards/verso/scenes/index.ts).
-# add_card.py choisit automatiquement l'une d'elles pour chaque message.
+# add_card.py choisit automatiquement l'une d'elles pour chaque carte-message.
 TEXT_ANIMATIONS = [
     "ink_text",
     "light_text",
@@ -131,7 +168,7 @@ TEXT_ANIMATIONS = [
     "morph_text",
 ]
 
-# Message par défaut lorsque l'utilisateur choisit « avec message »
+# Message par défaut lorsque l'utilisateur choisit « message »
 # mais valide le champ sans rien saisir.
 DEFAULT_MESSAGE = "?"
 
@@ -149,8 +186,8 @@ CARD_IMAGE_RE = re.compile(r"card(\d+)\.(?:webp|png|jpe?g)")
 #
 #   1. EFFETS DE TRANSITION  (ANIMATIONS, propriété CardConfig.animation) :
 #      bursts discrets joués à l'ouverture de la carte dans le viewer.
-#   2. VERSO GRAPHIQUE       (VERSO_ANIMATIONS, propriété CardConfig.verso) :
-#      les 17 scènes graphiques du dos de carte.
+#   2. VERSO MATHÉMATIQUE    (MATH_VERSOS, propriété CardConfig.verso) :
+#      les scènes mathématiques du catalogue M25 (Mission #25).
 #   3. VERSO TEXTE           (TEXT_ANIMATIONS, propriété CardConfig.messageAnimation) :
 #      les 7 scènes texte du message.
 #
@@ -158,7 +195,7 @@ CARD_IMAGE_RE = re.compile(r"card(\d+)\.(?:webp|png|jpe?g)")
 # chaque exécution depuis cards.json — le nombre d'utilisations déjà
 # enregistrées de chaque animation définit son niveau de départ :
 #   - transition  <- champ "animation" ;
-#   - verso       <- champ "verso" (les versoPool sont des possibilités, pas
+#   - verso math  <- champ "verso" (les versoPool sont des possibilités, pas
 #     des attributions : ils ne comptent pas) ;
 #   - texte       <- champ "messageAnimation".
 # Un tirage choisit toujours AU HASARD parmi les animations les moins
@@ -170,16 +207,14 @@ CARD_IMAGE_RE = re.compile(r"card(\d+)\.(?:webp|png|jpe?g)")
 # Les compteurs sont ensuite mis à jour localement au fil des ajouts, pour
 # que plusieurs cartes d'une même exécution s'équilibrent entre elles.
 #
-# Remarque rendu : pour une carte AVEC message, FlipCard.resolveVerso donne
-# la priorité à l'animation texte sur le verso graphique ; le champ "verso"
-# reste néanmoins écrit car les deux tirages sont indépendants et la donnée
-# demeure valide (contracts.ts : messageAnimation « works alongside » verso).
+# Le choix MANUEL (mode « manuel ») n'est PAS soumis à l'équilibrage : la
+# contrainte strecte ne s'applique qu'aux tirages au hasard.
 # ---------------------------------------------------------------------------
 
 def count_used_animations(cards, field, known):
     """Compte, pour chaque animation connue, ses utilisations dans cards.
 
-    field : clé JSON à inspecter ("animation" ou "messageAnimation").
+    field : clé JSON à inspecter ("animation", "verso" ou "messageAnimation").
     Les valeurs inconnues (données historiques) sont simplement ignorées :
     elles ne faussent ni les comptes ni l'équilibrage des nouvelles cartes."""
     counts = dict.fromkeys(known, 0)
@@ -199,6 +234,15 @@ def balanced_choice(animations, counts):
     par cycle, dans un ordre aléatoire."""
     minimum = min(counts[name] for name in animations)
     return random.choice([name for name in animations if counts[name] == minimum])
+
+
+def show_usage(prefix, counts):
+    """Affiche la répartition d'utilisation d'un sac (pour les stats)."""
+    rows = sorted(counts.items(), key=lambda kv: (kv[1], kv[0]))
+    print(f"\n  {prefix} :")
+    for name, count in rows:
+        label = MATH_VERSO_NAMES.get(name, name)
+        print(f"    {name:<24} {count:>3}  ({label})")
 
 
 def load_cards():
@@ -394,11 +438,70 @@ def encode_webp(im, output_path):
     return True
 
 
-def add(count):
+def choose_verso(math_counts, text_counts):
+    """Demande au créateur le MODE de verso pour UNE carte.
+
+    Retourne (verso, message, message_animation) — chacun peut être None :
+      - mode « random » : verso mathématique équilibré, aucun message ;
+      - mode « manuel » : choix manuel (liste numérotée), PAS bloqué par
+        l'équilibrage, aucun message ;
+      - mode « message » : carte-message, messageAnimation équilibrée, PAS de
+        verso graphique (messageAnimation a priorité au rendu) ;
+      - retourne None si l'utilisateur a quitté (→ quitter l'outil).
+    """
+    print("\nMode de verso pour cette carte :")
+    print("  1 · random    tirage équilibré d'un verso mathématique")
+    print("  2 · manuel    choix manuel d'un verso mathématique (sans équilibrage)")
+    print("  3 · message   carte-message (animation texte équilibrée)")
+    print("  4 · quitter")
+    choice = input("\nChoix [défaut 1 · random] : ").strip().lower()
+    if choice in {"2", "manuel", "manual", "m"}:
+        print("\nVersos mathématiques du catalogue (choix libre) :")
+        for i, name in enumerate(MATH_VERSOS, 1):
+            label = MATH_VERSO_NAMES.get(name, name)
+            print(f"  {i:>2}. {name}  ({label})")
+        # Balanced stats: display current usage so a human can decide; the
+        # choice itself is NOT constrained.
+        show_usage("Utilisations actuelles (verso math)", math_counts)
+        pick = input("\nNuméro du verso [défaut 1] : ").strip()
+        if pick.lower() in QUIT_WORDS:
+            return None
+        try:
+            index = int(pick) - 1 if pick.isdigit() else 0
+            verso = MATH_VERSOS[index]
+        except IndexError:
+            print(f"\nChoix invalide — {MATH_VERSOS[0]} utilisé à la place.")
+            verso = MATH_VERSOS[0]
+        print(f"Verso choisi : {verso}")
+        return verso, None, None
+
+    if choice in {"3", "message"}:
+        message = input("Message : ").strip() or DEFAULT_MESSAGE
+        message_animation = balanced_choice(TEXT_ANIMATIONS, text_counts)
+        text_counts[message_animation] += 1
+        print(f"Animation texte choisie (équilibrée) : {message_animation}")
+        return None, message, message_animation
+
+    if choice in QUIT_WORDS or choice in {"4", "quit", "exit"}:
+        return None
+
+    # Défaut / « random ».
+    verso = balanced_choice(MATH_VERSOS, math_counts)
+    math_counts[verso] += 1
+    print(f"Verso mathématique tiré (équilibré) : {verso}")
+    return verso, None, None
+
+
+def add(count, interactive=True):
     """Ajoute `count` cartes depuis cards_img/unused : chaque image est
     normalisée (ratio 3:4, grand côté ≤ MAX_EDGE) puis encodée en vrai WebP
     sous data/cards_img/cardN.webp. L'image source est **déplacée** de unused/
     vers son fichier final (elle disparaît de unused/ après succès).
+
+    Pour chaque carte, le MODE de verso est choisi :
+      - mode « random » : verso mathématique équilibré ;
+      - mode « manuel » : choix manuel (pas bloqué par l'équilibrage) ;
+      - mode « message » : carte-message (animation texte équilibrée).
 
     Transactionnel : cards.json n'est écrit qu'une fois toutes les images
     encodées ; en cas d'échec, les images déjà créées sont retirées et les
@@ -417,7 +520,7 @@ def add(count):
     # État initial des trois sacs équilibrés, reconstruit depuis cards.json
     # (les cartes déjà présentes comptent ; elles ne sont jamais modifiées).
     transition_counts = count_used_animations(cards, "animation", ANIMATIONS)
-    verso_counts = count_used_animations(cards, "verso", VERSO_ANIMATIONS)
+    math_counts = count_used_animations(cards, "verso", MATH_VERSOS)
     text_counts = count_used_animations(cards, "messageAnimation", TEXT_ANIMATIONS)
 
     prepared = []  # (nom_fichier_final, image_pillow, entrée_carte, source_path)
@@ -429,25 +532,17 @@ def add(count):
             continue
         output_name = f"card{next_image}.webp"
 
-        # Optional message + messageAnimation for text verso.
-        # Règle : message présent => messageAnimation présente (choisie
-        # automatiquement), message absent => messageAnimation absente.
-        message = None
-        message_animation = None
-        wants_message = input(f"\nAjouter un message texte au verso de {output_name} ? [o/N] : ").strip().lower()
-        if wants_message in ("o", "oui", "y", "yes"):
-            # Défaut « ? » si l'utilisateur valide sans rien saisir :
-            # jamais de message vide en mode « avec message ».
-            message = input("Message : ").strip() or DEFAULT_MESSAGE
-            # Animation texte choisie automatiquement : l'utilisateur n'a rien
-            # à connaître ni à saisir. Tirage équilibré (sac texte).
-            message_animation = balanced_choice(TEXT_ANIMATIONS, text_counts)
-            text_counts[message_animation] += 1
-
-        # Animation graphique de VERSO : tirage équilibré (sac verso),
-        # indépendant du sac texte et du sac des effets de transition.
-        card_verso = balanced_choice(VERSO_ANIMATIONS, verso_counts)
-        verso_counts[card_verso] += 1
+        verso, message, message_animation = None, None, None
+        if interactive:
+            result = choose_verso(math_counts, text_counts)
+            if result is None:
+                print("\nQuitter : aucune autre carte ajoutée.")
+                break
+            verso, message, message_animation = result
+        else:
+            # Mode non-interactif : verso mathématique équilibré.
+            verso = balanced_choice(MATH_VERSOS, math_counts)
+            math_counts[verso] += 1
 
         # Effet de TRANSITION à l'ouverture : tirage équilibré (sac transition).
         card_animation = balanced_choice(ANIMATIONS, transition_counts)
@@ -457,12 +552,13 @@ def add(count):
             "id": f"card-{next_id:03d}",
             "image": f"../../data/cards_img/{output_name}",
             "animation": card_animation,
-            "verso": card_verso,
         }
         if message:
             entry["message"] = message
         if message_animation:
             entry["messageAnimation"] = message_animation
+        elif verso:
+            entry["verso"] = verso
 
         prepared.append((output_name, im, entry, source))
         next_id += 1
@@ -578,13 +674,30 @@ def animate():
     print(f"Animation réattribuée à {len(cards)} carte(s).")
 
 
+def stats():
+    """Affiche les statistiques d'équilibrage dérivées de cards.json (aucun
+    compteur séparé n'existe). Répartition par famille : transitions, versos
+    mathématiques, animations texte."""
+    cards = load_cards()
+    transition_counts = count_used_animations(cards, "animation", ANIMATIONS)
+    math_counts = count_used_animations(cards, "verso", MATH_VERSOS)
+    text_counts = count_used_animations(cards, "messageAnimation", TEXT_ANIMATIONS)
+    print(f"\nStatistiques d'équilibrage depuis {CARDS_FILE.name} "
+          f"({len(cards)} carte(s)) :")
+    show_usage("Effets de transition", transition_counts)
+    show_usage("Versos mathématiques", math_counts)
+    show_usage("Animations texte", text_counts)
+    print()
+
+
 def show_menu():
     print("Menu add_card.py :")
     print("  1 · add N       ajouter N cartes (images normalisées, WebP)")
     print("  2 · animate     réattribuer les animations")
     print("  3 · migrate     reconvertir les images existantes en WebP normalisé")
-    print("  4 · quitter")
-    choice = input("\nChoix [défaut 4 · quitter] : ").strip().lower()
+    print("  4 · stats       statistiques d'équilibrage (depuis cards.json)")
+    print("  5 · quitter")
+    choice = input("\nChoix [défaut 5 · quitter] : ").strip().lower()
     if choice in {"add", "1"}:
         value = input("Combien de cartes ajouter ? [défaut 1] : ").strip()
         add(int(value) if value.isdigit() else 1)
@@ -592,7 +705,9 @@ def show_menu():
         animate()
     elif choice in {"migrate", "3"}:
         migrate()
-    # "4", entrée vide ou choix inconnu -> on quitte proprement.
+    elif choice in {"stats", "4"}:
+        stats()
+    # "5", entrée vide ou choix inconnu -> on quitte proprement.
 
 
 def main(args):
@@ -604,6 +719,8 @@ def main(args):
         add(int(first))
     elif first == "add":
         add(int(args[1]) if len(args) > 1 and args[1].isdigit() else 1)
+    elif first == "stats":
+        stats()
     elif first == "migrate":
         migrate()
     elif first == "animate":

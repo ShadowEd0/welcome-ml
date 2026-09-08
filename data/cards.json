@@ -3,54 +3,51 @@
         "id": "card-001",
         "image": "../../data/cards_img/card1.webp",
         "animation": "stars",
-        "verso": "ink_tide"
+        "verso": "damped_memory"
     },
     {
         "id": "card-002",
         "image": "../../data/cards_img/card2.webp",
         "animation": "stars",
-        "verso": "light_tailor"
+        "verso": "rose_garden"
     },
     {
         "id": "card-003",
         "image": "../../data/cards_img/card3.webp",
         "animation": "glow",
-        "verso": "sketchbook_living"
+        "verso": "petal_mandala"
     },
     {
         "id": "card-004",
         "image": "../../data/cards_img/card4.webp",
         "animation": "petals",
-        "verso": "porcelain_memory"
+        "verso": "golden_spiral"
     },
     {
         "id": "card-005",
         "image": "../../data/cards_img/card5.webp",
         "animation": "stars",
-        "verso": "floating_watercolor"
+        "verso": "clover_meadow"
     },
     {
         "id": "card-006",
         "image": "../../data/cards_img/card6.webp",
         "animation": "fireflies",
-        "verso": "retable_miniature"
+        "verso": "cardioid_echo"
     },
     {
         "id": "card-007",
         "image": "../../data/cards_img/card7.webp",
         "animation": "butterflies",
-        "versoPool": [
-            "prism_obsidian",
-            "vaporwave_sun"
-        ]
+        "verso": "celestial_orbits"
     },
     {
         "id": "card-008",
         "image": "../../data/cards_img/card8.webp",
         "animation": "stars",
         "versoPool": [
-            "celestial_constellation",
-            "liquid_gold"
+            "celestial_orbits",
+            "rose_galaxy"
         ]
     },
     {
@@ -58,44 +55,45 @@
         "image": "../../data/cards_img/card9.webp",
         "animation": "glow",
         "versoPool": [
-            "paper_origami",
-            "celestial_constellation"
+            "lissajous_weave",
+            "spirokinetic"
         ]
     },
     {
         "id": "card-010",
         "image": "../../data/cards_img/card10.webp",
         "animation": "confetti",
-        "verso": "starfield_heart"
+        "verso": "rose_galaxy"
     },
     {
         "id": "card-011",
         "image": "../../data/cards_img/card11.webp",
         "animation": "butterflies",
-        "verso": "origami_heart"
+        "verso": "celestial_butterfly"
     },
     {
         "id": "card-012",
         "image": "../../data/cards_img/card12.webp",
         "animation": "butterflies",
-        "verso": "trigonometric_heart"
+        "verso": "lissajous_weave"
     },
     {
         "id": "card-013",
         "image": "../../data/cards_img/card13.webp",
         "animation": "petals",
-        "verso": "geometric_morphing"
+        "verso": "orbital_symphony"
     },
     {
         "id": "card-014",
         "image": "../../data/cards_img/card14.webp",
         "animation": "glow",
-        "verso": "floral_bloom"
+        "verso": "spirokinetic"
     },
     {
         "id": "card-015",
         "image": "../../data/cards_img/card15.webp",
-        "animation": "fireflies"
+        "animation": "fireflies",
+        "verso": "lemniscate_infinity"
     },
     {
         "id": "card-016",

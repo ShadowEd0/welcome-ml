@@ -1,21 +1,6 @@
 import { registerVersoAnimation } from "../registry";
-import { breathingRingsAnimation } from "./breathingRings";
-import { inkTideAnimation } from "./inkTide";
-import { lightTailorAnimation } from "./lightTailor";
-import { sketchbookLivingAnimation } from "./sketchbookLiving";
-import { porcelainMemoryAnimation } from "./porcelainMemory";
-import { floatingWatercolorAnimation } from "./floatingWatercolor";
-import { retableMiniatureAnimation } from "./retableMiniature";
-import { prismObsidianAnimation } from "./prismObsidian";
-import { celestialConstellationAnimation } from "./celestialConstellation";
-import { paperOrigamiAnimation } from "./paperOrigami";
-import { liquidGoldAnimation } from "./liquidGold";
-import { vaporwaveSunAnimation } from "./vaporwaveSun";
-import { starfieldHeartAnimation } from "./starfieldHeart";
-import { origamiHeartAnimation } from "./origamiHeart";
-import { trigonometricHeartAnimation } from "./trigonometricHeart";
-import { geometricMorphingAnimation } from "./geometricMorphing";
-import { floralBloomAnimation } from "./floralBloom";
+import { MATH_VERSO_CATALOGUE } from "../math/catalog";
+import { toDefinition } from "../math/catalog";
 import { inkTextAnimation } from "./inkText";
 import { lightTextAnimation } from "./lightText";
 import { breathTextAnimation } from "./breathText";
@@ -25,23 +10,8 @@ import { liquidTextAnimation } from "./liquidText";
 import { morphTextAnimation } from "./morphText";
 
 // Registration happens at module load, before any renderer resolves ids.
-registerVersoAnimation(breathingRingsAnimation);
-registerVersoAnimation(inkTideAnimation);
-registerVersoAnimation(lightTailorAnimation);
-registerVersoAnimation(sketchbookLivingAnimation);
-registerVersoAnimation(porcelainMemoryAnimation);
-registerVersoAnimation(floatingWatercolorAnimation);
-registerVersoAnimation(retableMiniatureAnimation);
-registerVersoAnimation(prismObsidianAnimation);
-registerVersoAnimation(celestialConstellationAnimation);
-registerVersoAnimation(paperOrigamiAnimation);
-registerVersoAnimation(liquidGoldAnimation);
-registerVersoAnimation(vaporwaveSunAnimation);
-registerVersoAnimation(starfieldHeartAnimation);
-registerVersoAnimation(origamiHeartAnimation);
-registerVersoAnimation(trigonometricHeartAnimation);
-registerVersoAnimation(geometricMorphingAnimation);
-registerVersoAnimation(floralBloomAnimation);
+
+// 1) The 7 text animations (universe text side of the cards) stay active.
 registerVersoAnimation(inkTextAnimation);
 registerVersoAnimation(lightTextAnimation);
 registerVersoAnimation(breathTextAnimation);
@@ -49,3 +19,10 @@ registerVersoAnimation(floatTextAnimation);
 registerVersoAnimation(revealTextAnimation);
 registerVersoAnimation(liquidTextAnimation);
 registerVersoAnimation(morphTextAnimation);
+
+// 2) The mathematical verso catalogue (M25) — one registration per entry.
+//    The catalogue is the source of truth for ids used by cards.json and
+//    add_card.py; demos from earlier missions are intentionally NOT here.
+for (const entry of MATH_VERSO_CATALOGUE) {
+  registerVersoAnimation(toDefinition(entry));
+}
