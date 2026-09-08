@@ -299,11 +299,22 @@ def save_cards(cards):
 
 def available_unused():
     """Fichiers de unused/ réutilisables comme sources de nouvelles cartes.
-    Les sauvegardes «original-cardN.*» créées par `migrate` sont exclues."""
+
+    RÈGLE MÉTIER — l'utilisateur est l'unique source des nouvelles images :
+      - les sauvegardes «original-cardN.*» créées par `migrate` sont exclues ;
+      - toute image dont le nom correspond à une image déjà utilisée par une
+        carte (cardN.webp) est exclue : même si un cardN.webp se retrouvait
+        dans unused/, il ne pourrait jamais être recyclé par `add` ;
+      - AUCUN fallback vers data/cards_img/ : si unused/ ne fournit aucune
+        nouvelle image, `add` échoue explicitement (voir add())."""
     if not UNUSED_DIR.is_dir():
         return []
+    used_names = {p.name for p in IMAGES_DIR.iterdir()
+                  if p.is_file() and CARD_IMAGE_RE.fullmatch(p.name)}
     return sorted(p for p in UNUSED_DIR.iterdir()
-                  if p.is_file() and not p.name.startswith("original-"))
+                  if p.is_file()
+                  and not p.name.startswith("original-")
+                  and p.name not in used_names)
 
 
 def next_numbers(cards):
@@ -536,11 +547,30 @@ def add(count, interactive=True):
     Transactionnel : cards.json n'est écrit qu'une fois toutes les images
     encodées ; en cas d'échec, les images déjà créées sont retirées et les
     sources restent intactes dans unused/.
+
+    RÈGLE MÉTIER : seule une nouvelle image déposée à la main dans unused/
+    peut servir de source. Si aucune n'est disponible, l'opération échoue
+    explicitement, sans réutiliser aucune image déjà utilisée ni créer
+    quoi que ce soit.
     """
+    requested = int(count)
     available = available_unused()
-    count = min(int(count), len(available))
+    count = min(requested, len(available))
     if count <= 0:
-        print("Aucune image disponible dans cards_img/unused : rien à ajouter.")
+        if requested <= 0:
+            print("Aucune quantité positive demandée : rien à ajouter.")
+        else:
+            unused_rel = UNUSED_DIR.relative_to(DATA_DIR.parent)
+            print(f"❌ Échec de l'ajout de la carte {requested}." if requested == 1
+                  else f"❌ Échec de l'ajout des {requested} cartes.")
+            print(f"\nAucune nouvelle image source disponible dans :")
+            print(f"  {unused_rel.as_posix()}/")
+            print(f"\nAucune image déjà utilisée n'a été réutilisée, aucune copie effectuée,"
+                  f"\naucune carte créée ni modifiée ({CARDS_FILE.name} intact).")
+            print(f"\nAjoutez manuellement une nouvelle image dans :")
+            print(f"  {unused_rel.as_posix()}/")
+            print(f"\nPuis relancez :")
+            print(f"  python add_card.py add {requested}")
         return
 
     cards = load_cards()
