@@ -22,7 +22,10 @@ export function createGoldenSpiral(): MathScene {
         lineWidth: 1.7,
         glow: 1.6,
         count: 700,
-        tracer: createCometSpark(0, { x: 0, y: 0 }, { size: 0.06 }),
+        // The spiral spans ~4.9 world units, so auto-fit shrinks the whole
+        // composition ~×0.2. The comet is inflated accordingly to keep its
+        // on-card size consistent with scenes whose curves peak at 1.
+        tracer: createCometSpark(0, { x: 0, y: 0 }, { size: 0.3 }),
         trail: createGoldenDust("#ffd9a0", { capacity: 70, baseOpacity: 0.55 }),
       }),
     ]),

@@ -34,7 +34,7 @@ export function createCelestialButterfly(): MathScene {
         lineWidth: 1.1,
         glow: 0.8,
         count: 500,
-        trail: createVanishingGlow(PINK, { capacity: 40, baseOpacity: 0.4 }),
+        trail: createVanishingGlow(PINK, { capacity: 40, baseOpacity: 0.4, widthWorld: 0.2 }),
       }),
     ]),
     universe: createRoseCosmos(),

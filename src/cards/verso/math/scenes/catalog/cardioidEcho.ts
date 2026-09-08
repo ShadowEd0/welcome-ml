@@ -22,8 +22,10 @@ export function createCardioidEcho(): MathScene {
       makeLayer(cardioid(), "#ff6b6b", {
         lineWidth: 1.8,
         glow: 1.6,
-        tracer: createVioletFlame(0, { x: 0, y: 0 }, { size: 0.06 }),
-        trail: createVanishingGlow("#ff6b6b", { capacity: 40, baseOpacity: 0.5 }),
+        // The cardioid peaks at radius 2; auto-fit halves the composition,
+        // so the flame is sized up to keep its on-card radius typical.
+        tracer: createVioletFlame(0, { x: 0, y: 0 }, { size: 0.12 }),
+        trail: createVanishingGlow("#ff6b6b", { capacity: 40, baseOpacity: 0.5, widthWorld: 0.35 }),
       }),
       makeLayer(cardioid(), "#ff9d9d", {
         transform: { rotation: Math.PI },

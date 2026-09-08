@@ -108,6 +108,10 @@
   inset: 0;
   border-radius: inherit;
   overflow: hidden;
+  /* Profond repli sombre : aucun clair ne peut transparaître sous le
+     mini-univers, ne serait-ce qu'un instant, quelle que soit la vitesse
+     de montage du canvas (les univers peignent par-dessus immédiatement). */
+  background: #05060f;
 }
 
 .verso-canvas {

@@ -46,8 +46,10 @@ export class MathScene implements VersoScene {
     host.appendChild(canvas);
     this.canvas = canvas;
     this.engine = new MathEngine(this.config, canvas, ctx, {
-      showFrame: true,
-      frameColor: "#caa6ff",
+      // The reference frame is a debug/demo aid; finished versos keep it
+      // off unless their config explicitly asks for it.
+      showFrame: this.config.frame?.show ?? false,
+      frameColor: this.config.frame?.color ?? "#caa6ff",
     });
 
     this.resize();

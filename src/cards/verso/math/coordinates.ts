@@ -41,18 +41,28 @@ export interface CoordinateSystem {
 /**
  * Build a coordinate system for the given viewport.
  *
+ * The scale maps ONE world unit (ui) to `padded / 2` CSS pixels by
+ * default. When the composition's world-space radius is greater than 1,
+ * pass `worldRadius` so the whole shape is scaled down proportionally and
+ * always fits the margin — this is the calibration guard that keeps every
+ * curve (spiral, hypotrochoid, cardioid…) from overflowing the card.
+ *
  * @param width  viewport width in CSS pixels
  * @param height viewport height in CSS pixels
  * @param margin fraction of the short side kept as padding (0..1)
+ * @param worldRadius peak world-space distance of the composition from the
+ *                    origin (>= 1). Default 1.
  */
 export function createCoordinateSystem(
   width: number,
   height: number,
-  margin = 0.08
+  margin = 0.08,
+  worldRadius = 1
 ): CoordinateSystem {
   const shortSide = Math.min(width, height);
   const padded = shortSide * (1 - margin);
-  const scale = padded / 2;
+  const fit = Math.max(worldRadius, 0.001);
+  const scale = padded / 2 / fit;
   const center: ScreenPoint = { x: width / 2, y: height / 2 };
 
   return {

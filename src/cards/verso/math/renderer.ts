@@ -27,7 +27,15 @@ import type {
 import type { CoordinateSystem } from "./coordinates";
 import { applyTransform } from "./types";
 
-/** Draw a single sampled curve as a smooth polyline, with optional world transform. */
+/**
+ * Draw a single sampled curve as a smooth polyline, with optional world transform.
+ *
+ * @param maxPoints number of sampled points to draw, starting from point 0.
+ *                  0 → nothing, >= `pts.length` → the full curve (closed
+ *                  paths are then closed). During progressive drawing the
+ *                  engine passes a growing count so the curve is built under
+ *                  the tracer's pen without allocating a sub-polyline.
+ */
 function drawTransformedCurve(
   ctx: CanvasRenderingContext2D,
   cs: CoordinateSystem,
@@ -35,10 +43,11 @@ function drawTransformedCurve(
   transform: Transform2D | undefined,
   color: string,
   lineWidth: number,
-  glow: number
+  glow: number,
+  maxPoints: number
 ): void {
   const pts = curve.points;
-  if (pts.length < 2) return;
+  if (maxPoints <= 1 || pts.length < 2) return;
 
   ctx.save();
 
@@ -53,14 +62,15 @@ function drawTransformedCurve(
   ctx.lineJoin = "round";
   ctx.globalAlpha = 0.85;
 
+  const limit = Math.min(maxPoints, pts.length);
   ctx.beginPath();
   const first = cs.worldToScreen(applyTransform(pts[0], transform));
   ctx.moveTo(first.x, first.y);
-  for (let i = 1; i < pts.length; i++) {
+  for (let i = 1; i < limit; i++) {
     const p = cs.worldToScreen(applyTransform(pts[i], transform));
     ctx.lineTo(p.x, p.y);
   }
-  if (curve.closed) ctx.closePath();
+  if (curve.closed && limit >= pts.length) ctx.closePath();
   ctx.stroke();
 
   ctx.restore();
@@ -168,7 +178,8 @@ export function renderFrame(
   height: number,
   time: number,
   cs: CoordinateSystem,
-  config: MathVersoConfig
+  config: MathVersoConfig,
+  drawCounts?: readonly number[]
 ): void {
   ctx.clearRect(0, 0, width, height);
 
@@ -176,7 +187,9 @@ export function renderFrame(
   config.universe.paint(ctx, width, height, time);
 
   // Composition layers — each layer may have its own transform/tracer/trail
-  for (const layer of config.composition.layers) {
+  for (let li = 0; li < config.composition.layers.length; li++) {
+    const layer = config.composition.layers[li];
+    const maxPoints = drawCounts ? drawCounts[li] : undefined;
     drawTransformedCurve(
       ctx,
       cs,
@@ -184,7 +197,8 @@ export function renderFrame(
       layer.transform,
       layer.color,
       layer.lineWidth ?? 1.5,
-      layer.glow ?? 0
+      layer.glow ?? 0,
+      maxPoints ?? layer.curve.points.length
     );
 
     // Per-layer trail (rendered through the layer transform so it aligns

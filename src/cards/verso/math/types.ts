@@ -78,15 +78,6 @@ export interface CurveSpec {
   readonly description: string;
 }
 
-/** Sampled curve: a polyline in world coordinates plus its original definition. */
-export interface SampledCurve {
-  readonly fn: MathFunction;
-  readonly spec: SamplingSpec;
-  readonly points: readonly WorldPoint[];
-  /** True when the curve returns to its start (closed path). */
-  readonly closed: boolean;
-}
-
 /**
  * 2D affine transformation applied to a curve in world space.
  *
@@ -137,8 +128,44 @@ export function applyTransform(p: WorldPoint, t?: Transform2D): WorldPoint {
 }
 
 /**
+ * Easing profile for progressive drawing. "easeInOut" gives a gentle
+ * acceleration and deceleration; "easeOut" draws fast then settles; a
+ * large sequence feels less mechanical with a non-linear profile.
+ */
+export type RevealEasing = "linear" | "easeInOut" | "easeOut";
+
+/** Per-layer progressive-drawing blueprint. */
+export interface RevealLayerSpec {
+  /** Seconds before this layer starts building (starts after the global
+   *  stagger of preceding layers). Default 0. */
+  readonly delay?: number;
+  /** Seconds for this layer to build fully. Default: global duration. */
+  readonly duration?: number;
+  /** Easing for the build. Default: global easing. */
+  readonly easing?: RevealEasing;
+}
+
+/** Whole-composition progressive-drawing options. */
+export interface RevealOptions {
+  /** Master switch. When false, every layer appears instantly. Default true. */
+  readonly enabled?: boolean;
+  /** Seconds each layer takes to build fully. Default 3.2. */
+  readonly duration?: number;
+  /** Seconds added between consecutive layers. Default 0.28. */
+  readonly stagger?: number;
+  /** Global easing. Default "easeInOut". */
+  readonly easing?: RevealEasing;
+}
+
+/**
  * A drawable element inside a composition: a curve + its visual role +
  * an optional transformation applied in world space.
+ *
+ * A layer MAY declare a `reveal` blueprint to control how (and when) it is
+ * built progressively. When a layer owns a tracer, that tracer becomes its
+ * "pen": it rides exactly the reveal front while the curve is constructed.
+ * Layers without a tracer are simply drawn progressively by the same
+ * timeline.
  */
 export interface CurveLayer {
   readonly id: string;
@@ -149,6 +176,8 @@ export interface CurveLayer {
   readonly transform?: Transform2D;
   readonly tracer?: Tracer;
   readonly trail?: Trail;
+  /** Progressive-drawing blueprint for this layer (optional). */
+  readonly reveal?: RevealLayerSpec;
 }
 
 /**
@@ -263,10 +292,22 @@ export interface MathVersoConfig {
   readonly tracer?: Tracer;
   readonly trail?: Trail;
   readonly universe: Universe;
-    /** Tracer motion: how `t` advances per second. */
+  /**
+   * Tracer motion after the build: how `t` advances per second.
+   * During progressive drawing the reveal drives the tracer so the curve
+   * is always drawn exactly under the "pen". Default 0.35.
+   */
   readonly tracerSpeed: number;
   /** Whether the tracer loops at the end of its domain. */
   readonly tracerLoops: boolean;
   /** Optional color override for the global tracer (default #ffffff). */
   readonly tracerColor?: string;
+  /** Progressive-drawing options. Defaults: enabled, 3.2s, stagger 0.28. */
+  readonly reveal?: RevealOptions;
+  /** Optional reference frame, off by default (avoids a "technical drawing"
+   *  look on finished versos). */
+  readonly frame?: {
+    readonly show?: boolean;
+    readonly color?: string;
+  };
 }

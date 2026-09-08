@@ -27,7 +27,9 @@ export function createSpirokinetic(): MathScene {
         lineWidth: 1.5,
         glow: 1.3,
         count: 700,
-        tracer: createCrystalDrop(0, { x: 0, y: 0 }, { size: 0.05 }),
+        // Spirographs span ~3-4 world units; auto-fit shrinks them, so the
+        // tracers are inflated to keep their on-card size typical.
+        tracer: createCrystalDrop(0, { x: 0, y: 0 }, { size: 0.2 }),
         trail: createFadingLine(ICE, { capacity: 60, baseOpacity: 0.45, width: 1.2 }),
       }),
       makeLayer(hypotrochoid(5, 4, 2), FROST, {
@@ -35,7 +37,7 @@ export function createSpirokinetic(): MathScene {
         lineWidth: 1.1,
         glow: 0.8,
         count: 700,
-        tracer: createLuminousPointTracer(0, { x: 0, y: 0 }, { size: 0.04, color: FROST }),
+        tracer: createLuminousPointTracer(0, { x: 0, y: 0 }, { size: 0.13, color: FROST }),
         trail: createSilkRibbon(FROST, { capacity: 50, baseOpacity: 0.4 }),
       }),
     ]),
