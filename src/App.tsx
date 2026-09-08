@@ -26,8 +26,16 @@ function loadPreferences(): UserPreferences {
     const raw: unknown = JSON.parse(localStorage.getItem(PREFS_STORAGE_KEY) || 'null');
     if (!raw || typeof raw !== 'object') return DEFAULT_PREFERENCES;
     const saved = raw as Partial<UserPreferences>;
+    let universeId = typeof saved.universeId === 'string' ? saved.universeId : DEFAULT_PREFERENCES.universeId;
+    // Normaliser universeId contre le registry : une valeur inconnue (donnée
+    // corrompue ou ancienne) retombe sur le défaut officiel du registry
+    // (cosmos), comme UniverseRegistry.getUniverse(). Impêche qu'un id
+    // invalide ne reste durablement dans l'état React ni ne soit repersisté.
+    if (!UniverseRegistry.getInstance().getAllIds().includes(universeId)) {
+      universeId = DEFAULT_PREFERENCES.universeId;
+    }
     return {
-      universeId: typeof saved.universeId === 'string' ? saved.universeId : DEFAULT_PREFERENCES.universeId,
+      universeId,
       intensity: typeof saved.intensity === 'number' && saved.intensity >= 0.2 && saved.intensity <= 2 ? saved.intensity : DEFAULT_PREFERENCES.intensity,
       speed: typeof saved.speed === 'number' && saved.speed >= 0.2 && saved.speed <= 2 ? saved.speed : DEFAULT_PREFERENCES.speed,
       quality: ['AUTO', 'LOW', 'MEDIUM', 'HIGH', 'ULTRA'].includes(saved.quality || '') ? saved.quality as UserPreferences['quality'] : DEFAULT_PREFERENCES.quality,
@@ -81,12 +89,35 @@ export const App: React.FC = () => {
     const allUniverses: UniverseConfig[] = registry.getAllUniverses();
     setUniversesList(allUniverses.map((u: UniverseConfig) => ({ id: u.id, name: u.name || u.id })));
 
-    // Ne pas charger l'univers via le useEffect si une transition est en cours vers cet univers
+    // Transition en cours : laisser le onComplete écrire currentUniverse, puis
+    // réconcilier au passage suivant (déclenché par la dépendance ci-dessous).
     if (isTransitioningRef.current) return;
 
-    const initialUni = registry.getUniverse(preferences.universeId) || allUniverses[0] || null;
-    setCurrentUniverse(initialUni);
-  }, [registry, preferences.universeId]);
+    // currentUniverse reflète toujours la dernière preferences.universeId.
+    // Un changement arrivé pendant la fenêtre CSS d'une transition (timer
+    // 7 min ou sélecteur de réglages) est ainsi restauré une fois la
+    // transition terminée, au lieu de laisser les deux sources diverger.
+    const target = registry.getUniverse(preferences.universeId) || allUniverses[0] || null;
+    if (currentUniverse?.id !== target?.id) {
+      setCurrentUniverse(target);
+    }
+  }, [registry, preferences.universeId, currentUniverse]);
+
+  // Hors transition, la racine <html> reflète toujours la palette de
+  // currentUniverse. Pendant une transition, SceneTransitionManager est seul
+  // à écrire les vars interpolées sur la racine. Évite qu'un changement
+  // direct de currentUniverse (reset, timer, réconciliation #13) ne laisse
+  // une palette racine périmée pour les variables dérivées (:root).
+  useEffect(() => {
+    if (isTransitioningRef.current) return;
+    if (!currentUniverse) return;
+    const root = document.documentElement;
+    root.style.setProperty('--u-primary', currentUniverse.palette.primary);
+    root.style.setProperty('--u-secondary', currentUniverse.palette.secondary);
+    root.style.setProperty('--u-accent', currentUniverse.palette.accent);
+    root.style.setProperty('--u-text', currentUniverse.palette.textColor);
+    root.style.setProperty('--u-glow', currentUniverse.palette.glowColor);
+  }, [currentUniverse]);
 
   // Change l'univers avec une transition animée des couleurs CSS.
   // Le manager annule automatiquement toute transition précédente via RAF.
@@ -101,6 +132,17 @@ export const App: React.FC = () => {
 
     // Mettre à jour les préférences immédiatement pour l'UI
     setPreferences(prev => ({ ...prev, universeId: toId }));
+
+    // P1 : démarrer le crossfade canvas dès t≈0, en parallèle de
+    // l'interpolation des couleurs CSS. prepareTransition ne touche pas à
+    // engine.effects (source A) : le crossfade garde bien A comme source et
+    // B comme cible, et finishCrossfade ne bascule vers B qu'à son terme.
+    const targetEffects = buildEffectConfigs(to, preferences);
+    const engine = visualCanvasRef.current?.getEngine();
+    if (engine && targetEffects.length > 0) {
+      engine.prepareTransition(targetEffects);
+      engine.startCrossfade(1500);
+    }
 
     const manager = new SceneTransitionManager();
     transitionManagerRef.current = manager;
@@ -119,14 +161,10 @@ export const App: React.FC = () => {
         root.style.setProperty('--u-glow', config.palette.glowColor);
       },
       () => {
-        const targetEffects = buildEffectConfigs(to, preferences);
-
-        const engine = visualCanvasRef.current?.getEngine();
-        if (engine) {
-          engine.prepareTransition(targetEffects);
-          engine.startCrossfade(1500);
-        }
-
+        // Fin de transition : le wrapper adopte la palette B au même moment
+        // où le crossfade canvas (démarré à t≈0, durée 1500 ms) arrive à son
+        // terme. L'effet de synchronisation racine (#15) prend ensuite le
+        // relais hors transition.
         setCurrentUniverse(to);
         isTransitioningRef.current = false;
         transitionManagerRef.current = null;
@@ -222,14 +260,9 @@ export const App: React.FC = () => {
       ? `radial-gradient(circle at ${background.glowPosition?.x ?? 50}% ${background.glowPosition?.y ?? 50}%, ${background.colors.join(', ')})`
       : `linear-gradient(${background.angle ?? 180}deg, ${background.colors.join(', ')})`
     : '#000000';
-  const universeStyle = currentUniverse ? {
-    '--u-primary': currentUniverse.palette.primary,
-    '--u-secondary': currentUniverse.palette.secondary,
-    '--u-accent': currentUniverse.palette.accent,
-    '--u-text': currentUniverse.palette.textColor,
-    '--u-glow': currentUniverse.palette.glowColor,
+  const universeStyle = {
     background: backgroundStyle,
-  } as React.CSSProperties : { background: backgroundStyle };
+  } as React.CSSProperties;
 
   return (
     <CardsProvider>

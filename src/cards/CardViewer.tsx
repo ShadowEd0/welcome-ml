@@ -68,7 +68,7 @@ export function CardViewer() {
         className="card-viewer-dialog"
         role="dialog"
         aria-modal="true"
-        aria-label={`${activeCard.character} card`}
+        aria-label={`Card ${activeCard.id}`}
         tabIndex={-1}
       >
         <button

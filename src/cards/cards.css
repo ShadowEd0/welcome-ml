@@ -55,21 +55,10 @@
 }
 
 .flip-card__face--front {
-  display: grid;
-  grid-template-rows: auto 1fr auto;
-}
-
-.flip-card__character {
-  justify-self: start;
-  margin: 10px 12px 0;
-  font-family: "Cormorant Garamond", Georgia, serif;
-  font-size: 0.95rem;
-  color: var(--u-text, #f4eeff);
-  letter-spacing: 0.02em;
+  display: block;
 }
 
 .flip-card__image {
-  grid-row: 2;
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -80,38 +69,57 @@
   opacity: 0.85;
 }
 
-.flip-card__anime {
-  justify-self: end;
-  margin: 0 12px 10px;
-  font-size: 0.78rem;
-  color: color-mix(in srgb, var(--u-text, #f4eeff) 75%, transparent);
-}
-
+/* Le verso reste volontairement un panneau décoratif neutre pour l'instant :
+   le futur système des "100 mini-univers" viendra animer cette face sans
+   toucher au modèle de carte. Aucun texte n'y est posé. */
 .flip-card__face--back {
   transform: rotateY(180deg);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: 1.6rem 1.4rem;
-  text-align: center;
-  gap: 0.75rem;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(
+      120% 120% at 50% 12%,
+      color-mix(in srgb, var(--u-glow, #caa6ff) 40%, transparent) 0%,
+      transparent 55%
+    ),
+    radial-gradient(
+      120% 120% at 50% 105%,
+      color-mix(in srgb, var(--u-primary, #caa6ff) 25%, transparent) 0%,
+      transparent 60%
+    ),
+    var(--card-bg);
 }
 
-.flip-card__quote {
-  font-family: "Cormorant Garamond", Georgia, serif;
-  font-style: italic;
-  color: var(--u-text, #f4eeff);
-  line-height: 1.4;
-  /* Long text adapts: shrink within a bounded range instead of overflowing. */
-  font-size: clamp(0.85rem, 4.2cqi, 1.15rem);
-  container-type: inline-size;
+.flip-card__face--back::after {
+  content: "";
+  width: 58%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 1px solid var(--card-border);
+  box-shadow:
+    inset 0 0 24px color-mix(in srgb, var(--u-glow, #caa6ff) 35%, transparent),
+    0 0 28px color-mix(in srgb, var(--u-glow, #caa6ff) 25%, transparent);
 }
 
-.flip-card__author {
-  margin-top: auto;
-  font-size: 0.78rem;
-  color: color-mix(in srgb, var(--u-accent, #caa6ff) 80%, white);
+/* ---------- Verso scenes (back-face mini-univers) ---------- */
+
+.verso-scene-host {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  overflow: hidden;
+}
+
+.verso-canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+
+/* Quand une scène de verso est montée, l'anneau décoratif statique s'efface
+   pour laisser la place au mini-univers de la carte. */
+.flip-card__face--back:has(.verso-scene-host)::after {
+  display: none;
 }
 
 /* ---------- Floating cards ---------- */
@@ -185,6 +193,15 @@
   align-items: center;
   gap: 1rem;
   outline: none;
+  /* Le dialog couvre tout l'intérieur du backdrop : ses gouttières
+     transparentes doivent laisser passer les clics jusqu'au backdrop pour
+     que « cliquer dehors » ferme le viewer, sans casser les clics sur la
+     carte et sur les boutons de navigation. */
+  pointer-events: none;
+}
+
+.card-viewer-dialog > * {
+  pointer-events: auto;
 }
 
 .card-viewer-stage {
@@ -192,8 +209,13 @@
   justify-self: center;
 }
 
+/* La carte agrandie (ratio 2/3) ne doit jamais dépasser la hauteur du
+   viewport : sa largeur est plafonnée pour que hauteur = largeur × 1.5
+   reste dans la zone visible (viewport court / mobile paysage). `vh`
+   sert de repli, `dvh` prend le dessus sur les navigateurs récents. */
 .flip-card--enlarged {
-  width: min(78vw, 320px);
+  width: min(78vw, 320px, calc((100vh - 5rem) * 2 / 3));
+  width: min(78vw, 320px, calc((100dvh - 5rem) * 2 / 3));
 }
 
 .card-viewer-close {
@@ -278,6 +300,9 @@
 
 @media (max-width: 640px) {
   .flip-card { width: 168px; }
-  .flip-card--enlarged { width: 82vw; }
+  .flip-card--enlarged {
+    width: min(82vw, 320px, calc((100vh - 3rem) * 2 / 3));
+    width: min(82vw, 320px, calc((100dvh - 3rem) * 2 / 3));
+  }
   .card-viewer-backdrop { padding: 1rem; }
 }

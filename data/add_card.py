@@ -7,7 +7,6 @@ Usage:
     python add_card.py                -> menu interactif
     python add_card.py <n>            -> ajoute n cartes (raccourci)
     python add_card.py add <n>        -> ajoute n cartes depuis cards_img/unused
-    python add_card.py complete       -> complète les champs manquants
     python add_card.py animate        -> réattribue aléatoirement une animation par carte
     python add_card.py migrate        -> reconvertit les images des cartes existantes
                                          en vrais WebP normalisés (3:4, <= 1200 px)
@@ -17,7 +16,8 @@ Pipeline d'import des images :
     analyse du format réel (Pillow) -> normalisation (mode couleur, taille) ->
     crop éventuel vers le ratio 3:4 (sans déformation) ->
     encodage WebP (qualité 82) -> data/cards_img/cardN.webp -> carte ajoutée à cards.json.
-    L'image source n'est jamais déplacée ni supprimée : elle reste dans unused/.
+    L'image source est **déplacée** (supprimée de unused/) après succès de l'encodage
+    et de la sauvegarde de cards.json. Elle ne reste donc pas dans unused/.
 
 Outil requis : Pillow (Python). Aucune autre dépendance.
 
@@ -55,8 +55,8 @@ UNUSED_DIR = IMAGES_DIR / "unused"
 # script. Les images déposées dans unused/ peuvent être de n'importe quel
 # format réel (jpg, png, webp…) ; la détection et la conversion sont faites
 # ici par Pillow, jamais par l'extension de fichier.
-# L'original n'est jamais supprimé ni déplacé : unused/ reste la bibliothèque
-# de sources réutilisables.
+# L'original est supprimé de unused/ après encodage réussi et sauvegarde de cards.json.
+# unused/ ne contient donc que les images encore disponibles pour de futures cartes.
 # ---------------------------------------------------------------------------
 
 # Ratio cible d'une carte (largeur / hauteur), ici 3:4.
@@ -78,8 +78,11 @@ CROP_ANCHORS = {
     "right": "right",
 }
 
-# Animations supportées par le site
-# (voir src/core/contracts.ts -> KNOWN_CARD_ANIMATIONS).
+# Effets de transition / sélection de carte ("burst" joué à l'ouverture
+# d'une carte dans le viewer — voir src/cards/animations/index.tsx ->
+# CardAnimationOverlay, alimenté par CardConfig.animation).
+# CE NE SONT PAS des animations de verso : ils ne touchent jamais le dos
+# des cartes. Liste miroir de src/core/contracts.ts -> RANDOMIZABLE_ANIMATIONS.
 ANIMATIONS = [
     "heart_burst",
     "sparkles",
@@ -91,12 +94,111 @@ ANIMATIONS = [
     "confetti",
 ]
 
-# Valeurs considérées comme "vides" -> proposées à la complétion.
-EMPTY_VALUES = {"", " ", "none", "unknown"}
+# Vraies animations GRAPHIQUES de verso (17) : scènes enregistrées dans
+# src/cards/verso/scenes/index.ts, hors animations texte. Utilisables par
+# une carte via CardConfig.verso / versoPool, rendues par le système verso
+# (FlipCard.resolveVerso -> VersoAnimationRenderer -> registry).
+VERSO_ANIMATIONS = [
+    "breathing_rings",
+    "ink_tide",
+    "light_tailor",
+    "sketchbook_living",
+    "porcelain_memory",
+    "floating_watercolor",
+    "retable_miniature",
+    "prism_obsidian",
+    "celestial_constellation",
+    "paper_origami",
+    "liquid_gold",
+    "vaporwave_sun",
+    "starfield_heart",
+    "origami_heart",
+    "trigonometric_heart",
+    "geometric_morphing",
+    "floral_bloom",
+]
+
+# Animations TEXTUELLES de verso (7) — famille indépendante.
+# IDs exacts du registre (voir src/cards/verso/scenes/index.ts).
+# add_card.py choisit automatiquement l'une d'elles pour chaque message.
+TEXT_ANIMATIONS = [
+    "ink_text",
+    "light_text",
+    "breath_text",
+    "float_text",
+    "reveal_text",
+    "liquid_text",
+    "morph_text",
+]
+
+# Message par défaut lorsque l'utilisateur choisit « avec message »
+# mais valide le champ sans rien saisir.
+DEFAULT_MESSAGE = "?"
+
+# Valeurs de sortie (menu / crop / saisies), hors complétion de texte.
 QUIT_WORDS = {"quit", "exit", "-q"}
 
 CARD_ID_RE = re.compile(r"card-(\d+)")
 CARD_IMAGE_RE = re.compile(r"card(\d+)\.(?:webp|png|jpe?g)")
+
+# ---------------------------------------------------------------------------
+# Randomisation équilibrée (sac mélangé / shuffle bag).
+#
+# Remplace le hasard indépendant (random.choice) par un tirage équilibré sans
+# répétition, appliqué INDÉPENDAMMENT à TROIS familles distinctes :
+#
+#   1. EFFETS DE TRANSITION  (ANIMATIONS, propriété CardConfig.animation) :
+#      bursts discrets joués à l'ouverture de la carte dans le viewer.
+#   2. VERSO GRAPHIQUE       (VERSO_ANIMATIONS, propriété CardConfig.verso) :
+#      les 17 scènes graphiques du dos de carte.
+#   3. VERSO TEXTE           (TEXT_ANIMATIONS, propriété CardConfig.messageAnimation) :
+#      les 7 scènes texte du message.
+#
+# Persistance : AUCUN fichier d'état. L'état de chaque sac est reconstruit à
+# chaque exécution depuis cards.json — le nombre d'utilisations déjà
+# enregistrées de chaque animation définit son niveau de départ :
+#   - transition  <- champ "animation" ;
+#   - verso       <- champ "verso" (les versoPool sont des possibilités, pas
+#     des attributions : ils ne comptent pas) ;
+#   - texte       <- champ "messageAnimation".
+# Un tirage choisit toujours AU HASARD parmi les animations les moins
+# utilisées :
+#   - une animation ne peut pas être re-tirée avant que toutes les autres
+#     aient atteint son niveau (aucune répétition dans un cycle) ;
+#   - l'écart max-min entre compteurs reste <= 1 sur le long terme ;
+#   - l'ordre reste aléatoire (égalités tirées au hasard à chaque tirage).
+# Les compteurs sont ensuite mis à jour localement au fil des ajouts, pour
+# que plusieurs cartes d'une même exécution s'équilibrent entre elles.
+#
+# Remarque rendu : pour une carte AVEC message, FlipCard.resolveVerso donne
+# la priorité à l'animation texte sur le verso graphique ; le champ "verso"
+# reste néanmoins écrit car les deux tirages sont indépendants et la donnée
+# demeure valide (contracts.ts : messageAnimation « works alongside » verso).
+# ---------------------------------------------------------------------------
+
+def count_used_animations(cards, field, known):
+    """Compte, pour chaque animation connue, ses utilisations dans cards.
+
+    field : clé JSON à inspecter ("animation" ou "messageAnimation").
+    Les valeurs inconnues (données historiques) sont simplement ignorées :
+    elles ne faussent ni les comptes ni l'équilibrage des nouvelles cartes."""
+    counts = dict.fromkeys(known, 0)
+    for card in cards:
+        value = card.get(field)
+        if value in counts:
+            counts[value] += 1
+    return counts
+
+
+def balanced_choice(animations, counts):
+    """Tirage équilibré : une animation au hasard parmi les moins utilisées.
+
+    Équivalent exact à un sac mélangé consommé niveau par niveau : tant qu'il
+    existe une animation de niveau minimal non épuisée, seule celle-ci (ou ses
+    égales) peut sortir, donc chaque animation apparaît exactement une fois
+    par cycle, dans un ordre aléatoire."""
+    minimum = min(counts[name] for name in animations)
+    return random.choice([name for name in animations if counts[name] == minimum])
 
 
 def load_cards():
@@ -295,10 +397,12 @@ def encode_webp(im, output_path):
 def add(count):
     """Ajoute `count` cartes depuis cards_img/unused : chaque image est
     normalisée (ratio 3:4, grand côté ≤ MAX_EDGE) puis encodée en vrai WebP
-    sous data/cards_img/cardN.webp. L'original reste toujours dans unused/.
+    sous data/cards_img/cardN.webp. L'image source est **déplacée** de unused/
+    vers son fichier final (elle disparaît de unused/ après succès).
 
     Transactionnel : cards.json n'est écrit qu'une fois toutes les images
-    encodées ; en cas d'échec, les images déjà créées sont retirées.
+    encodées ; en cas d'échec, les images déjà créées sont retirées et les
+    sources restent intactes dans unused/.
     """
     available = available_unused()
     count = min(int(count), len(available))
@@ -310,7 +414,13 @@ def add(count):
     next_id, next_image = next_numbers(cards)
     IMAGES_DIR.mkdir(parents=True, exist_ok=True)
 
-    prepared = []  # (nom_fichier_final, image_pillow, entrée_carte)
+    # État initial des trois sacs équilibrés, reconstruit depuis cards.json
+    # (les cartes déjà présentes comptent ; elles ne sont jamais modifiées).
+    transition_counts = count_used_animations(cards, "animation", ANIMATIONS)
+    verso_counts = count_used_animations(cards, "verso", VERSO_ANIMATIONS)
+    text_counts = count_used_animations(cards, "messageAnimation", TEXT_ANIMATIONS)
+
+    prepared = []  # (nom_fichier_final, image_pillow, entrée_carte, source_path)
     for source in random.sample(available, count):
         while (IMAGES_DIR / f"card{next_image}.webp").exists():
             next_image += 1
@@ -318,15 +428,43 @@ def add(count):
         if im is None:
             continue
         output_name = f"card{next_image}.webp"
-        prepared.append((output_name, im, {
+
+        # Optional message + messageAnimation for text verso.
+        # Règle : message présent => messageAnimation présente (choisie
+        # automatiquement), message absent => messageAnimation absente.
+        message = None
+        message_animation = None
+        wants_message = input(f"\nAjouter un message texte au verso de {output_name} ? [o/N] : ").strip().lower()
+        if wants_message in ("o", "oui", "y", "yes"):
+            # Défaut « ? » si l'utilisateur valide sans rien saisir :
+            # jamais de message vide en mode « avec message ».
+            message = input("Message : ").strip() or DEFAULT_MESSAGE
+            # Animation texte choisie automatiquement : l'utilisateur n'a rien
+            # à connaître ni à saisir. Tirage équilibré (sac texte).
+            message_animation = balanced_choice(TEXT_ANIMATIONS, text_counts)
+            text_counts[message_animation] += 1
+
+        # Animation graphique de VERSO : tirage équilibré (sac verso),
+        # indépendant du sac texte et du sac des effets de transition.
+        card_verso = balanced_choice(VERSO_ANIMATIONS, verso_counts)
+        verso_counts[card_verso] += 1
+
+        # Effet de TRANSITION à l'ouverture : tirage équilibré (sac transition).
+        card_animation = balanced_choice(ANIMATIONS, transition_counts)
+        transition_counts[card_animation] += 1
+
+        entry = {
             "id": f"card-{next_id:03d}",
             "image": f"../../data/cards_img/{output_name}",
-            "character": "unknown",
-            "anime": "unknown",
-            "quote": "unknown",
-            "animation": random.choice(ANIMATIONS),
-            "author": "unknown",
-        }))
+            "animation": card_animation,
+            "verso": card_verso,
+        }
+        if message:
+            entry["message"] = message
+        if message_animation:
+            entry["messageAnimation"] = message_animation
+
+        prepared.append((output_name, im, entry, source))
         next_id += 1
         next_image += 1
 
@@ -336,13 +474,13 @@ def add(count):
 
     written = []
     try:
-        for output_name, im, _ in prepared:
+        for output_name, im, _, _ in prepared:
             output_path = IMAGES_DIR / output_name
             if not encode_webp(im, output_path):
                 output_path.unlink(missing_ok=True)
                 raise RuntimeError(f"encodage WebP échoué pour {output_name}")
             written.append(output_path)
-        for _, _, entry in prepared:
+        for _, _, entry, _ in prepared:
             cards.append(entry)
         save_cards(cards)
     except BaseException:
@@ -351,8 +489,15 @@ def add(count):
             path.unlink(missing_ok=True)
         raise
 
+    # Succès complet : on supprime les sources de unused/
+    for _, _, _, source in prepared:
+        try:
+            source.unlink()
+        except OSError as exc:
+            print(f"Attention : impossible de supprimer {source.name} de unused/ ({exc}).")
+
     print(f"{len(prepared)} carte(s) ajoutée(s) et sauvegardée(s) dans {CARDS_FILE.name}.")
-    print(f"Les images sources restent disponibles dans {UNUSED_DIR.name}/.\n")
+    print(f"Les images sources ont été retirées de {UNUSED_DIR.name}/.\n")
 
 
 def migrate():
@@ -418,40 +563,14 @@ def migrate():
     print(f"Les originaux sont conservés dans {UNUSED_DIR.name}/ (préfixe «original-»).")
 
 
-def complete():
-    """Complète interactivement les champs vides / 'unknown' de chaque carte."""
-    cards = load_cards()
-    print("Instructions :")
-    print(" - Complétez les champs vides ou 'unknown' des cartes ci-dessous.")
-    print(" - 'quit', 'exit' ou '-q' pour quitter (les saisies déjà faites sont gardées).")
-    print(" - Entrée vide, 'none' ou 'unknown' remet le champ à 'unknown'.\n")
-
-    stop = False
-    for card in cards:
-        if stop:
-            break
-        empty_fields = [f for f in card if str(card[f]).strip().lower() in EMPTY_VALUES]
-        if not empty_fields:
-            continue
-        print(f"=================== carte id: {card.get('id')} ===================\n")
-        for field in empty_fields:
-            value = input(f"    {field}: ")
-            if value.strip().lower() in QUIT_WORDS:
-                stop = True
-                break
-            if value.strip().lower() in EMPTY_VALUES:
-                card[field] = "unknown"
-            else:
-                card[field] = value.strip()
-        print()
-
-    save_cards(cards)
-    print("Complétion interrompue — saisies déjà effectuées sauvegardées." if stop
-          else "Complétion terminée.")
-
-
 def animate():
-    """Réattribue aléatoirement une animation à chaque carte."""
+    """Réattribue aléatoirement une animation à chaque carte.
+
+    Note (audit 3 familles) : cette commande opère uniquement sur la propriété
+    "animation" = EFFETS DE TRANSITION à l'ouverture (CardAnimationOverlay),
+    PAS sur les animations de verso (verso / messageAnimation). C'est la
+    famille correcte pour cette fonctionnalité historique : comportement
+    conservé tel quel (random.choice), volontairement non équilibré."""
     cards = load_cards()
     for card in cards:
         card["animation"] = random.choice(ANIMATIONS)
@@ -462,19 +581,18 @@ def animate():
 def show_menu():
     print("Menu add_card.py :")
     print("  1 · add N       ajouter N cartes (images normalisées, WebP)")
-    print("  2 · complete    compléter les champs manquants")
-    print("  3 · animate     réattribuer les animations")
-    print("  4 · migrate     reconvertir les images existantes en WebP normalisé")
-    choice = input("\nChoix [défaut 2 · complete] : ").strip().lower()
+    print("  2 · animate     réattribuer les animations")
+    print("  3 · migrate     reconvertir les images existantes en WebP normalisé")
+    print("  4 · quitter")
+    choice = input("\nChoix [défaut 4 · quitter] : ").strip().lower()
     if choice in {"add", "1"}:
         value = input("Combien de cartes ajouter ? [défaut 1] : ").strip()
         add(int(value) if value.isdigit() else 1)
-    elif choice in {"animate", "3"}:
+    elif choice in {"animate", "2"}:
         animate()
-    elif choice in {"migrate", "4"}:
+    elif choice in {"migrate", "3"}:
         migrate()
-    else:
-        complete()
+    # "4", entrée vide ou choix inconnu -> on quitte proprement.
 
 
 def main(args):
@@ -488,8 +606,6 @@ def main(args):
         add(int(args[1]) if len(args) > 1 and args[1].isdigit() else 1)
     elif first == "migrate":
         migrate()
-    elif first == "complete":
-        complete()
     elif first == "animate":
         animate()
     else:

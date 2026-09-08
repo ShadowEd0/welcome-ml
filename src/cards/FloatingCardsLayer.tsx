@@ -51,7 +51,7 @@ export function FloatingCardsLayer({ enabled, count, reducedMotion }: FloatingCa
   if (!enabled || slots.length === 0) return null;
 
   return (
-    <div className="floating-cards-layer" aria-label="Floating character cards">
+    <div className="floating-cards-layer" aria-label="Floating cards">
       {slots.map((card, i) => (
         <FloatingCard
           key={card.id}

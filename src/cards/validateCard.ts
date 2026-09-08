@@ -42,9 +42,9 @@ export function resolveCardImagePath(image: string): string {
 
 /**
  * Turns one raw JSON entry from data/cards.json into a card that is safe to
- * render. Never throws. Returns null only when the entry is missing the
- * fields that make it identifiable/renderable at all (id, image, character,
- * anime, quote) — such entries are skipped rather than shown broken.
+ * render. Never throws. Missing rendering essentials degrade gracefully:
+ * a missing image falls back to the inline placeholder and a missing id is
+ * derived from the array index. Only non-object entries are skipped.
  */
 export function validateCard(raw: unknown, index: number): SanitizedCard | null {
   if (typeof raw !== "object" || raw === null) {
@@ -55,26 +55,25 @@ export function validateCard(raw: unknown, index: number): SanitizedCard | null 
   const candidate = raw as Record<string, unknown>;
 
   const id = isNonEmptyString(candidate.id) ? candidate.id : `card-${index}`;
-  const character = isNonEmptyString(candidate.character) ? candidate.character : "";
-  const anime = isNonEmptyString(candidate.anime) ? candidate.anime : "";
-  const quote = isNonEmptyString(candidate.quote) ? candidate.quote : "";
   const image = isNonEmptyString(candidate.image)
     ? resolveCardImagePath(candidate.image)
     : FALLBACK_CARD_IMAGE;
 
-  if (!character || !anime || !quote) {
-    console.warn(`[cards] entry "${id}" is missing required text fields — skipped.`);
-    return null;
-  }
-
-  const author = isNonEmptyString(candidate.author) ? candidate.author : undefined;
   const randomAnimation = candidate.randomAnimation === true;
+  const verso = isNonEmptyString(candidate.verso) ? candidate.verso : undefined;
+  const versoPool = Array.isArray(candidate.versoPool)
+    ? candidate.versoPool.filter(isNonEmptyString)
+    : undefined;
+  const message = isNonEmptyString(candidate.message) ? candidate.message : undefined;
+  const messageAnimation = isNonEmptyString(candidate.messageAnimation)
+    ? candidate.messageAnimation
+    : undefined;
 
   const animation = randomAnimation
     ? RANDOMIZABLE_ANIMATIONS[Math.floor(Math.random() * RANDOMIZABLE_ANIMATIONS.length)]
     : normalizeCardAnimation(candidate.animation);
 
-  return { id, image, character, anime, quote, author, animation };
+  return { id, image, animation, verso, versoPool, message, messageAnimation };
 }
 
 /** Validates a full raw JSON payload (expected to be an array). */

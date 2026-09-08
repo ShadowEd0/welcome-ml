@@ -2,64 +2,120 @@
     {
         "id": "card-001",
         "image": "../../data/cards_img/card1.webp",
-        "character": "Je ne sais pas",
-        "anime": "Teen Titan",
-        "quote": "A short, memorable line that captures the character.",
         "animation": "stars",
-        "author": "Character Name"
+        "verso": "ink_tide"
     },
     {
         "id": "card-002",
         "image": "../../data/cards_img/card2.webp",
-        "character": "Test",
-        "anime": "Sword Art Online",
-        "quote": "unknown",
-        "animation": "butterflies",
-        "author": "unknown"
+        "animation": "stars",
+        "verso": "light_tailor"
     },
     {
         "id": "card-003",
         "image": "../../data/cards_img/card3.webp",
-        "character": "unknown",
-        "anime": "Hotel Transylvanie",
-        "quote": "unknown",
-        "animation": "fireflies",
-        "author": "unknown"
+        "animation": "glow",
+        "verso": "sketchbook_living"
     },
     {
         "id": "card-004",
         "image": "../../data/cards_img/card4.webp",
-        "character": "unknown",
-        "anime": "Kung fu Panda",
-        "quote": "unknown",
-        "animation": "sparkles",
-        "author": "unknown"
+        "animation": "petals",
+        "verso": "porcelain_memory"
     },
     {
         "id": "card-005",
         "image": "../../data/cards_img/card5.webp",
-        "character": "Deku",
-        "anime": "My Hero Academia",
-        "quote": "unknown",
-        "animation": "confetti",
-        "author": "unknown"
+        "animation": "stars",
+        "verso": "floating_watercolor"
     },
     {
         "id": "card-006",
         "image": "../../data/cards_img/card6.webp",
-        "character": "Mikasa Ackerman",
-        "anime": "Attack des titans",
-        "quote": "unknown",
-        "animation": "heart_burst",
-        "author": "unknown"
+        "animation": "fireflies",
+        "verso": "retable_miniature"
     },
     {
         "id": "card-007",
         "image": "../../data/cards_img/card7.webp",
-        "character": "unknown",
-        "anime": "Naruto",
-        "quote": "unknown",
+        "animation": "butterflies",
+        "versoPool": [
+            "prism_obsidian",
+            "vaporwave_sun"
+        ]
+    },
+    {
+        "id": "card-008",
+        "image": "../../data/cards_img/card8.webp",
+        "animation": "stars",
+        "versoPool": [
+            "celestial_constellation",
+            "liquid_gold"
+        ]
+    },
+    {
+        "id": "card-009",
+        "image": "../../data/cards_img/card9.webp",
+        "animation": "glow",
+        "versoPool": [
+            "paper_origami",
+            "celestial_constellation"
+        ]
+    },
+    {
+        "id": "card-010",
+        "image": "../../data/cards_img/card10.webp",
+        "animation": "confetti",
+        "verso": "starfield_heart"
+    },
+    {
+        "id": "card-011",
+        "image": "../../data/cards_img/card11.webp",
+        "animation": "butterflies",
+        "verso": "origami_heart"
+    },
+    {
+        "id": "card-012",
+        "image": "../../data/cards_img/card12.webp",
+        "animation": "butterflies",
+        "verso": "trigonometric_heart"
+    },
+    {
+        "id": "card-013",
+        "image": "../../data/cards_img/card13.webp",
         "animation": "petals",
-        "author": "unknown"
+        "verso": "geometric_morphing"
+    },
+    {
+        "id": "card-014",
+        "image": "../../data/cards_img/card14.webp",
+        "animation": "glow",
+        "verso": "floral_bloom"
+    },
+    {
+        "id": "card-015",
+        "image": "../../data/cards_img/card15.webp",
+        "animation": "fireflies"
+    },
+    {
+        "id": "card-016",
+        "image": "../../data/cards_img/card16.webp",
+        "animation": "fireflies",
+        "message": "Un petit mot pour toi...",
+        "messageAnimation": "ink_text"
+    },
+    {
+        "id": "card-017",
+        "image": "../../data/cards_img/card17.webp",
+        "animation": "stars",
+        "message": "Saluuuuut",
+        "messageAnimation": "float_text"
+    },
+    {
+        "id": "card-018",
+        "image": "../../data/cards_img/card18.webp",
+        "animation": "sparkles",
+        "message": "Idk",
+        "messageAnimation": "reveal_text"
     }
 ]
