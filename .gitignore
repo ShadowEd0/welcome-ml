@@ -12,3 +12,6 @@ Thumbs.db
 # Artefacts Python (générés par data/add_card.py)
 __pycache__/
 *.pyc
+
+# unused
+src/cards/verso/scenes/unused/

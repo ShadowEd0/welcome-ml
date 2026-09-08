@@ -99,21 +99,57 @@
         "id": "card-016",
         "image": "../../data/cards_img/card16.webp",
         "animation": "fireflies",
-        "message": "Un petit mot pour toi...",
-        "messageAnimation": "ink_text"
+        "message": "Hi ...",
+        "messageAnimation": "morph_text"
     },
     {
         "id": "card-017",
         "image": "../../data/cards_img/card17.webp",
         "animation": "stars",
-        "message": "Saluuuuut",
+        "message": "I love u ...",
         "messageAnimation": "float_text"
     },
     {
         "id": "card-018",
         "image": "../../data/cards_img/card18.webp",
         "animation": "sparkles",
-        "message": "Idk",
-        "messageAnimation": "reveal_text"
+        "message": "Goodbye.",
+        "messageAnimation": "light_text"
+    },
+    {
+        "id": "card-019",
+        "image": "../../data/cards_img/card19.webp",
+        "animation": "heart_burst",
+        "verso": "rational_lens"
+    },
+    {
+        "id": "card-020",
+        "image": "../../data/cards_img/card20.webp",
+        "animation": "sparkles",
+        "verso": "quantum_lace"
+    },
+    {
+        "id": "card-021",
+        "image": "../../data/cards_img/card21.webp",
+        "animation": "confetti",
+        "verso": "gielis_shield"
+    },
+    {
+        "id": "card-022",
+        "image": "../../data/cards_img/card22.webp",
+        "animation": "heart_burst",
+        "verso": "crystal_maurer"
+    },
+    {
+        "id": "card-023",
+        "image": "../../data/cards_img/card23.webp",
+        "animation": "confetti",
+        "verso": "aizawa_vortex"
+    },
+    {
+        "id": "card-024",
+        "image": "../../data/cards_img/card24.webp",
+        "animation": "sparkles",
+        "verso": "attractor_silk"
     }
 ]
