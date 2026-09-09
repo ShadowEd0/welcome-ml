@@ -1,6 +1,6 @@
 import { defineConfig, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
-import { cpSync, existsSync, mkdirSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, rmSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 /**
@@ -32,6 +32,9 @@ function copyDataDir(): Plugin {
 
       mkdirSync(dest, { recursive: true });
       cpSync(src, dest, { recursive: true, force: true });
+      for (const name of ['add_card.py', 'requirements.txt', '__pycache__']) {
+        rmSync(resolve(dest, name), { recursive: true, force: true });
+      }
       this.info('[copy-data-dir] "data/" copié vers "dist/data/".');
     },
   };
