@@ -15,3 +15,11 @@ __pycache__/
 
 # unused
 src/cards/verso/scenes/unused/
+
+# Variables d'environnement locales (.env.example est versionné)
+.env
+.env.*
+!.env.example
+
+# Outillage agent local (hors projet)
+.opencode/

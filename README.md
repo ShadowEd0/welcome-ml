@@ -411,6 +411,45 @@ npm run preview
 
 ---
 
+# 📊 Google Analytics 4
+
+Le suivi GA4 est géré par un module unique, `src/analytics/`, appelé depuis
+`src/main.tsx`. Le site étant une SPA sans routeur ni SSR, une seule vue de page
+est envoyée par chargement (par gtag.js lui-même).
+
+Le Measurement ID n'est **pas** écrit dans le code : il provient de la variable
+d'environnement `VITE_GA_MEASUREMENT_ID` (convention Vite, cf. `.env.example`).
+
+```bash
+# .env  ou  .env.local
+VITE_GA_MEASUREMENT_ID=G-XXXXXXXXXX
+```
+
+Tant que cette variable est absente, vide ou invalide, `gtag.js` n'est pas
+chargé et le site fonctionne exactement comme avant.
+
+En production (build Cloudflare Workers) :
+
+```bash
+# PowerShell
+$env:VITE_GA_MEASUREMENT_ID="G-XXXXXXXXXX"; npm run build
+npx wrangler deploy
+```
+
+Pour envoyer un événement personnalisé, utiliser l'export prévu pour cela :
+
+```ts
+import { trackEvent } from './analytics';
+
+trackEvent('universe_change', { universe_id: 'cosmos' });
+```
+
+Si un routeur est ajouté plus tard, désactiver `send_page_view` dans
+`initAnalytics()` et appeler `trackEvent('page_view', { page_path })` à chaque
+changement de route, afin d'éviter les doublons de vues.
+
+---
+
 # 🛡️ Règles importantes
 
 ### Ne pas modifier inutilement le moteur
